@@ -1,5 +1,7 @@
 #!/bin/bash
 
+todo=$(todo.sh)
+root="/home/carnager/Documents/todo"
 export EDITOR="gvim -f"
 BROWSER="chromium"
 
@@ -12,11 +14,15 @@ item=$(echo "${tasklist}" | awk '{ print $1 }')
 if [[ $val -eq 10 ]]
     then url="$(todo.sh note show ${item})"
     if [[ $url == *"has no note." ]]; then
-        errormenu=$(echo -e "< Return\nAdd URL to item" | rofi -dmenu -mesg "${url}")
+        errormenu=$(echo -e "< Return\n1. Add URL to item" | rofi -dmenu -auto-select -mesg "${url}")
         if [[ $errormenu == "< Return" ]]
         then main
-        elif [[ $errormenu == "Add URL to item" ]]
-        then yes | todo.sh note add "${item}"
+        elif [[ $errormenu == "1. Add URL to item" ]]
+        then todo.sh append "${item}" "note:${item}.txt"
+            urlinput=$(echo "" | rofi -dmenu -mesg "Enter URL" -p "> ")
+            if [[ $urlinput == "" ]]; then exit
+            else echo "${urlinput}" > "${root}/notes/${item}.txt"
+            fi
         fi
     else $BROWSER "$(todo.sh note show ${item})"
     fi
