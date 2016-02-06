@@ -1,0 +1,49 @@
+#!/bin/bash
+
+export EDITOR="gvim -f"
+BROWSER="chromium"
+
+main () {
+tasklist=$(todo.sh ls | rofi -dmenu -kb-custom-1 "Alt+o" -kb-custom-2 "Alt+a" -mesg "Alt+o: Open URL | Alt+a: Actions" -p "Tasklist > ")
+
+val=$?
+item=$(echo "${tasklist}" | awk '{ print $1 }')
+
+if [[ $val -eq 10 ]]
+    then url="$(todo.sh note show ${item})"
+    if [[ $url == *"has no note." ]]; then
+        errormenu=$(echo -e "< Return\nAdd URL to item" | rofi -dmenu -mesg "${url}")
+        if [[ $errormenu == "< Return" ]]
+        then main
+        elif [[ $errormenu == "Add URL to item" ]]
+        then yes | todo.sh note add "${item}"
+        fi
+    else $BROWSER "$(todo.sh note show ${item})"
+    fi
+
+elif [[ $val -eq 11 ]]
+    then actions
+fi
+}
+
+actions () {
+    actionlist=$(echo -e "1. Mark Done\n2. Archive\n3. Delete" | rofi -dmenu -p "Actions for item ${item} > ")
+
+    if [[ $actionlist == "1. Mark Done" ]]; then
+        todo.sh 'do' "${item}"
+
+    elif [[ $actionlist == "2. Archive" ]]; then
+        todo.sh archive "${item}"
+
+    elif [[ $actionlist == "3. Delete" ]]; then
+        askmenu=$(echo -e "1. Yes\n2. No" | rofi -dmenu -p "Delete item ${item}? > ")
+        if [[ $askmenu == "1. Yes" ]]; then
+            yes | todo.sh del "${item}";
+            main
+        elif [[ $askmenu == "2. No" ]]; then
+            main
+        fi
+    fi
+}
+
+main
