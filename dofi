@@ -5,51 +5,90 @@ root="/home/carnager/Documents/todo"
 export EDITOR="gvim -f"
 BROWSER="chromium"
 
+cd "${root}"
+if [[ ! -d "./.git" ]]; then
+    git init
+fi
+
 main () {
-tasklist=$(todo.sh ls | rofi -dmenu -kb-custom-1 "Alt+o" -kb-custom-2 "Alt+a" -mesg "Alt+o: Open URL | Alt+a: Actions" -p "Tasklist > ")
-
-val=$?
+tasklist=$(echo -e "< Exit\n---\n$(todo.sh ls)" | rofi -dmenu -kb-custom-1 "Alt+n" -mesg "Alt+n: New Task" -p "Tasklist > ")
+tasklist_val=$?
 item=$(echo "${tasklist}" | awk '{ print $1 }')
-
-if [[ $val -eq 10 ]]
-    then url="$(todo.sh note show ${item})"
-    if [[ $url == *"has no note." ]]; then
-        errormenu=$(echo -e "< Return\n1. Add URL to item" | rofi -dmenu -auto-select -mesg "${url}")
-        if [[ $errormenu == "< Return" ]]
-        then main
-        elif [[ $errormenu == "1. Add URL to item" ]]
-        then todo.sh append "${item}" "note:${item}.txt"
-            urlinput=$(echo "" | rofi -dmenu -mesg "Enter URL" -p "> ")
-            if [[ $urlinput == "" ]]; then exit
-            else echo "${urlinput}" > "${root}/notes/${item}.txt"
-            fi
-        fi
-    else $BROWSER "$(todo.sh note show ${item})"
+if [[ $tasklist_val -eq 1 ]]; then
+    exit
+elif [[ $tasklist_val -eq 10 ]]; then
+    inputmenu=$(echo "" | rofi -dmenu -p "> " -mesg "Format: \"TODO NAME\" +PROJECT @CONTEXT")
+    todo.sh a "${inputmenu}"
+    gitHook
+    main
+else
+    if [[ $tasklist == "< Exit" ]]; then
+        exit
+    else
+        actions
     fi
-
-elif [[ $val -eq 11 ]]
-    then actions
 fi
 }
 
 actions () {
-    actionlist=$(echo -e "1. Mark Done\n2. Archive\n3. Delete" | rofi -dmenu -p "Actions for item ${item} > ")
+    url=$(cat "${root}/notes/${item}.url")
+    if [[ -z $url ]]; then
+        actionlist=$(echo -e "< Return\n---\n1. Mark Done\n2. Archive\n3. Delete\n4. Associate URL" | rofi -dmenu -p "Actions for item ${item} > ")
+        actionlist_val=$?
+    else
+        actionlist=$(echo -e "< Return\n---\n1. Mark Done\n2. Archive\n3. Delete\n4. Open URL\n5. Delete URL" | rofi -dmenu -mesg "Detected URL: ${url}" -p "Actions for item ${item} > ")
+        actionlist_val=$?
+    fi
+
+    if [[ $actionlist_val -eq 1 ]]; then exit
+    else
 
     if [[ $actionlist == "1. Mark Done" ]]; then
         todo.sh 'do' "${item}"
+        gitHook
+        main
+
+    elif [[ $actionlist == "< Return" ]]; then
+        main
 
     elif [[ $actionlist == "2. Archive" ]]; then
         todo.sh archive "${item}"
+        gitHook
+        main
 
     elif [[ $actionlist == "3. Delete" ]]; then
         askmenu=$(echo -e "1. Yes\n2. No" | rofi -dmenu -p "Delete item ${item}? > ")
         if [[ $askmenu == "1. Yes" ]]; then
             yes | todo.sh del "${item}";
+            gitHook
             main
         elif [[ $askmenu == "2. No" ]]; then
-            main
+            actions
         fi
+    elif [[ $actionlist == "4. Associate URL" ]]; then
+        urlinput=$(echo "" | rofi -dmenu -mesg "Enter URL" -p "> ")
+        urlintput_val=$?
+        if [[ $urlinput_val -eq 1 ]]; then exit
+        else echo "${urlinput}" > "${root}/notes/${item}.url";
+        gitHook
+        actions
+        fi
+    elif [[ $actionlist == "4. Open URL" ]]; then
+        "$BROWSER" "${url}"
+    elif [[ $actionlist == "5. Delete URL" ]]; then
+        rm "${root}/notes/${item}.url"
+        gitHook
+        actions
+    else
+        actions
     fi
+    fi
+}
+
+gitHook () {
+    git add *
+    git add notes/*
+    git commit -m "update"
 }
 
 main
