@@ -71,7 +71,7 @@ actions () {
 
         elif  [[ -n $note ]]; then
             message="Detected URL: ${url}
-Note Head:    $(head -1 ${root}/notes/${item}.note)"
+Note Preview: $(head -1 ${root}/notes/${item}.note)"
             actionlist=$(echo -e "< Return\n---\n1 Mark Done\n2 Archive\n3 Delete\n4 Set Priority\n---\n5 Open URL\n6 Delete URL\n---\n8 View Note\n9 Edit Note\n0 Delete Note" | rofi -dmenu -mesg "${message}" -p "Actions for item ${item} > ")
             actionlist_val=$?
         fi
