@@ -7,14 +7,16 @@ todo () {
 root="$HOME/Documents/todo"
 export EDITOR="gvim -f"
 BROWSER="chromium"
+EDITOR="gvim -f"
 
 cd "${root}"
 if [[ ! -d "./.git" ]]; then
     git init
 fi
 
+
 main () {
-    tasklist=$(echo -e "< Exit\n---\n$(todo ls)" | rofi -dmenu -kb-custom-1 "Alt+n" -mesg "Alt+n: New Task" -p "Tasklist > ")
+    tasklist=$(echo -e "< Exit\n---\n$(todo ls)" | rofi -dmenu -kb-custom-1 "Alt+n" -kb-custom-2 "Alt+Tab" -mesg "Alt+n: New Task | Alt+Tab: Switch View" -p "Tasklist > ")
     tasklist_val=$?
     item=$(echo "${tasklist}" | awk '{ print $1 }')
     if [[ $tasklist_val -eq 1 ]]; then
@@ -24,6 +26,17 @@ main () {
         todo a "${inputmenu}"
         gitHook
         main
+    elif [[ $tasklist_val -eq 11 ]]; then
+        taskview_menu=$(echo -e "1 Show tasks by Priority\n2 Switch Tasks file" | rofi -dmenu -p "View > ")
+        if [[ $taskview_menu == "1 Show tasks by Priority" ]]; then
+            prio_view_menu=$(echo -e "< Return\n---\n$(todo lsp)" | rofi -dmenu -p "Tasks by Priority > ")
+            if [[ $prio_view_menu == "< Return" ]]; then
+                main
+            else
+                item=$(echo "${prio_view_menu}" | awk '{ print $1 }')
+                actions
+            fi
+        fi
     else
         if [[ $tasklist == "< Exit" ]]; then
             exit
@@ -35,12 +48,23 @@ main () {
 
 actions () {
     url=$(cat "${root}/notes/${item}.url")
+    note=$(cat "${root}/notes/${item}.note")
     if [[ -z $url ]]; then
-        actionlist=$(echo -e "< Return\n---\n1 Mark Done\n2 Archive\na3 Delete\n4 Set Priority\n5 Associate URL" | rofi -dmenu -p "Actions for item ${item} > ")
+        if [[ -z $note ]]; then
+            actionlist=$(echo -e "< Return\n---\n1 Mark Done\n2 Archive\n3 Delete\n4 Set Priority\n5 Associate URL\n9 Add Note" | rofi -dmenu -p "Actions for item ${item} > ")
+            actionlist_val=$?
+
+        elif  [[ -n $note ]]; then
+            actionlist=$(echo -e "< Return\n---\n1 Mark Done\n2 Archive\n3 Delete\n4 Set Priority\n5 Associate URL\n8 View Note\n9 Edit Note\n0 Delete Note" | rofi -dmenu -p "Actions for item ${item} > ")
+            actionlist_val=$?
+        fi
+    elif [[ -n $url ]]; then
+        if [[ -z $note ]]; then
+            actionlist=$(echo -e "< Return\n---\n1 Mark Done\n2 Archive\n3 Delete\n4 Set Priority\n5 Open URL\n6 Delete URL\n9 Add Note" | rofi -dmenu -mesg "Detected URL: ${url}" -p "Actions for item ${item} > ")
         actionlist_val=$?
-    else
-        actionlist=$(echo -e "< Return\n---\n1 Mark Done\n2 Archive\n3 Delete\n4 Set Priority\n5 Open URL\n6 Delete URL" | rofi -dmenu -mesg "Detected URL: ${url}" -p "Actions for item ${item} > ")
-        actionlist_val=$?
+        elif  [[ -n $note ]]; then
+            actionlist=$(echo -e "< Return\n---\n1 Mark Done\n2 Archive\n3 Delete\n4 Set Priority\n5 Open URL\n6 Delete URL\n8 View Note\n9 Edit Note\n0 Delete Note" | rofi -dmenu -mesg "Detected URL: ${url}" -p "Actions for item ${item} > ")
+        fi
     fi
 
     if [[ $actionlist_val -eq 1 ]]; then exit
@@ -79,6 +103,26 @@ actions () {
             gitHook
             actions
         fi
+
+    elif [[ $actionlist == "9 Add Note" || $actionlist == "9 Edit Note" ]]; then
+        ${EDITOR} "${root}/notes/${item}.note"
+        gitHook
+        actions
+
+    elif [[ $actionlist == "8 View Note" ]]; then
+        noteview=$(echo -e "< Return\n---\n${note}" | rofi -dmenu -p "Note for item ${item} > ")
+        noteview_val=$?
+        if [[ $noteview_val -eq 1 ]]; then
+            exit
+        else
+            if [[ $noteview == "< Return" ]]; then
+                actions
+            fi
+        fi
+
+    elif [[ $actionlist == "0 Delete Note" ]]; then
+        rm -f "${root}/notes/${item}.note"
+        actions
 
     elif [[ $actionlist == "5 Associate URL" ]]; then
         urlinput=$(echo "" | rofi -dmenu -mesg "Enter URL" -p "> ")
