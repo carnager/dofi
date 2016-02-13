@@ -1,4 +1,4 @@
-# robot
+# dofi
 rofi UI for todo.txt
 
 # Screenshot
