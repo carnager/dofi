@@ -13,20 +13,20 @@ fi
 
 
 main () {
-    tasklist=$(echo -e "< Exit\n---\n$(todo ls)" | rofi -dmenu -kb-custom-1 "Alt+n" -kb-custom-2 "Alt+Tab" -mesg "Alt+n: New Task | Alt+Tab: Switch View" -filter "${filter}" -p "Tasklist > ")
+    tasklist=$(echo -e "< Exit\n---\n$(todo ls)" | roficmd -dmenu -kb-custom-1 "Alt+n" -kb-custom-2 "Alt+Tab" -mesg "Alt+n: New Task | Alt+Tab: Switch View" -filter "${filter}" -p "Tasklist > ")
     tasklist_val=$?
     item=$(echo "${tasklist}" | awk '{ print $1 }')
     if [[ $tasklist_val -eq 1 ]]; then
         exit
     elif [[ $tasklist_val -eq 10 ]]; then
-        inputmenu=$(echo "" | rofi -dmenu -p "> " -mesg "Format: \"TODO NAME\" +PROJECT @CONTEXT")
+        inputmenu=$(echo "" | roficmd -dmenu -p "> " -mesg "Format: \"TODO NAME\" +PROJECT @CONTEXT")
         todo a "${inputmenu}"
         gitHook
         main
     elif [[ $tasklist_val -eq 11 ]]; then
-        taskview_menu=$(echo -e "1 Show tasks by Priority\n2 List Projects" | rofi -dmenu -p "View > ")
+        taskview_menu=$(echo -e "1 Show tasks by Priority\n2 List Projects" | roficmd -dmenu -p "View > ")
         if [[ $taskview_menu == "1 Show tasks by Priority" ]]; then
-            prio_view_menu=$(echo -e "< Return\n---\n$(todo lsp)" | rofi -dmenu -p "Tasks by Priority > ")
+            prio_view_menu=$(echo -e "< Return\n---\n$(todo lsp)" | roficmd -dmenu -p "Tasks by Priority > ")
             if [[ $prio_view_menu == "< Return" ]]; then
                 main
             else
@@ -34,7 +34,7 @@ main () {
                 actions
             fi
         elif [[ $taskview_menu == "2 List Projects" ]]; then
-            proj_menu=$(echo -e "< Return\n---\n$(todo ls | grep -ow '+\w*' | uniq)" | rofi -dmenu -p "Projects > ")
+            proj_menu=$(echo -e "< Return\n---\n$(todo ls | grep -ow '+\w*' | uniq)" | roficmd -dmenu -p "Projects > ")
             proj_menu_val=$?
             if [[ $proj_menu_val -eq 1 ]]; then exit
             elif [[ $proj_menu_val == "< Return" ]]; then
@@ -57,22 +57,22 @@ actions () {
     note=$(cat "${root}/notes/${item}.note" 2> /dev/null )
     if [[ -z $url ]]; then
         if [[ -z $note ]]; then
-            actionlist=$(echo -e "< Return\n---\n1 Mark Done\n2 Archive\n3 Delete\n4 Set Priority\n---\n5 Associate URL\n9 Add Note" | rofi -dmenu -p "Actions for item ${item} > ")
+            actionlist=$(echo -e "< Return\n---\n1 Mark Done\n2 Archive\n3 Delete\n4 Set Priority\n---\n5 Associate URL\n9 Add Note" | roficmd -dmenu -p "Actions for item ${item} > ")
             actionlist_val=$?
 
         elif  [[ -n $note ]]; then
-            actionlist=$(echo -e "< Return\n---\n1 Mark Done\n2 Archive\n3 Delete\n4 Set Priority\n---\n5 Associate URL\n---\n8 View Note\n9 Edit Note\n0 Delete Note" | rofi -dmenu -mesg "$(echo ${note} | head -1)" -p "Actions for item ${item} > ")
+            actionlist=$(echo -e "< Return\n---\n1 Mark Done\n2 Archive\n3 Delete\n4 Set Priority\n---\n5 Associate URL\n---\n8 View Note\n9 Edit Note\n0 Delete Note" | roficmd -dmenu -mesg "$(echo ${note} | head -1)" -p "Actions for item ${item} > ")
             actionlist_val=$?
         fi
     elif [[ -n $url ]]; then
         if [[ -z $note ]]; then
-            actionlist=$(echo -e "< Return\n---\n1 Mark Done\n2 Archive\n3 Delete\n4 Set Priority\n---\n5 Open URL\n6 Delete URL\n---\n9 Add Note" | rofi -dmenu -mesg "Detected URL: ${url}" -p "Actions for item ${item} > ")
+            actionlist=$(echo -e "< Return\n---\n1 Mark Done\n2 Archive\n3 Delete\n4 Set Priority\n---\n5 Open URL\n6 Delete URL\n---\n9 Add Note" | roficmd -dmenu -mesg "Detected URL: ${url}" -p "Actions for item ${item} > ")
             actionlist_val=$?
 
         elif  [[ -n $note ]]; then
             message="Detected URL: ${url}
 Note Preview: $(head -1 ${root}/notes/${item}.note)"
-            actionlist=$(echo -e "< Return\n---\n1 Mark Done\n2 Archive\n3 Delete\n4 Set Priority\n---\n5 Open URL\n6 Delete URL\n---\n8 View Note\n9 Edit Note\n0 Delete Note" | rofi -dmenu -mesg "${message}" -p "Actions for item ${item} > ")
+            actionlist=$(echo -e "< Return\n---\n1 Mark Done\n2 Archive\n3 Delete\n4 Set Priority\n---\n5 Open URL\n6 Delete URL\n---\n8 View Note\n9 Edit Note\n0 Delete Note" | roficmd -dmenu -mesg "${message}" -p "Actions for item ${item} > ")
             actionlist_val=$?
         fi
     fi
@@ -94,7 +94,7 @@ Note Preview: $(head -1 ${root}/notes/${item}.note)"
         main
 
     elif [[ $actionlist == "3 Delete" ]]; then
-        askmenu=$(echo -e "1. Yes\n2. No" | rofi -dmenu -p "Delete item ${item}? > ")
+        askmenu=$(echo -e "1. Yes\n2. No" | roficmd -dmenu -p "Delete item ${item}? > ")
         if [[ $askmenu == "1. Yes" ]]; then
             yes | todo del "${item}";
             rm "${root}/notes/${item}" > /dev/null
@@ -105,7 +105,7 @@ Note Preview: $(head -1 ${root}/notes/${item}.note)"
         fi
 
     elif [[ $actionlist == "4 Set Priority" ]]; then
-        prio_menu=$(echo -e "< Return\n---\nA\nB\nC\nD\nE\nUnset Priority" | rofi -dmenu -p "Priority > ")
+        prio_menu=$(echo -e "< Return\n---\nA\nB\nC\nD\nE\nUnset Priority" | roficmd -dmenu -p "Priority > ")
         if [[ $prio_menu == "< Return" ]]; then
             actions
 
@@ -121,7 +121,7 @@ Note Preview: $(head -1 ${root}/notes/${item}.note)"
         fi
 
     elif [[ $actionlist == "9 Add Note" || $actionlist == "9 Edit Note" ]]; then
-        notemenu=$(echo -e "< Return\n1 Use Editor" | rofi -dmenu -p "Set Note > " -mesg "Type Note or select below")
+        notemenu=$(echo -e "< Return\n1 Use Editor" | roficmd -dmenu -p "Set Note > " -mesg "Type Note or select below")
         if [[ $notemenu == "< Return" ]]; then
             actions
         elif [[ $notemenu == "1 Use Editor" ]]; then
@@ -135,7 +135,7 @@ Note Preview: $(head -1 ${root}/notes/${item}.note)"
         fi
 
     elif [[ $actionlist == "8 View Note" ]]; then
-        noteview=$(echo -e "< Return\n---\n${note}" | rofi -dmenu -p "Note for item ${item} > ")
+        noteview=$(echo -e "< Return\n---\n${note}" | roficmd -dmenu -p "Note for item ${item} > ")
         noteview_val=$?
         if [[ $noteview_val -eq 1 ]]; then
             exit
@@ -150,7 +150,7 @@ Note Preview: $(head -1 ${root}/notes/${item}.note)"
         actions
 
     elif [[ $actionlist == "5 Associate URL" ]]; then
-        urlinput=$(echo "" | rofi -dmenu -mesg "Enter URL" -p "> ")
+        urlinput=$(echo "" | roficmd -dmenu -mesg "Enter URL" -p "> ")
         urlintput_val=$?
         if [[ $urlinput_val -eq 1 ]]; then exit
         else echo "${urlinput}" > "${root}/notes/${item}.url";
@@ -162,7 +162,7 @@ Note Preview: $(head -1 ${root}/notes/${item}.note)"
         "$BROWSER" "${url}"
 
     elif [[ $actionlist == "5. Delete URL" ]]; then
-        askmenu=$(echo -e "1. Yes\n2. No" | rofi -dmenu -p "Delete item ${item}? > ")
+        askmenu=$(echo -e "1. Yes\n2. No" | roficmd -dmenu -p "Delete item ${item}? > ")
         if [[ $askmenu == "1. Yes" ]]; then
             rm "${root}/notes/${item}.url"
             gitHook
@@ -181,5 +181,15 @@ gitHook () {
     git add notes/*
     git commit -m "update"
 }
+
+if [[ -z "$rofiopts" ]]; then
+    roficmd () {
+        rofi -dmenu "$@"
+    }
+else
+    roficmd () {
+        rofi -dmenu $(echo "$rofiopts") "$@"
+    }
+fi
 
 main
