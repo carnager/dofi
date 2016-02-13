@@ -23,6 +23,7 @@ rofi UI for todo.txt
 * awk
 * grep
 * rofi
+* out2html (https://github.com/DaveDavenport/out2html) (for colors support)
 
 # Installation
 
