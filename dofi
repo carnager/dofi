@@ -1,17 +1,8 @@
 #!/bin/bash
 
-colors="true"
-
-if [[ $colors == "true" ]]; then
-    todo () {
-        todo.sh "$@" | out2html --pango-markup
-    }
-    rofiopts="-markup-rows"
-else
-    todo () {
-        todo.sh -p "$@"
-    }
-fi
+todo () {
+    todo.sh -p "$@"
+}
 
 root="$HOME/Documents/todo"
 export EDITOR="gvim -f"
@@ -25,7 +16,7 @@ fi
 
 
 main () {
-    tasklist=$(echo -e "< Exit\n---\n$(todo ls)" | rofi -dmenu -kb-custom-1 "Alt+n" -kb-custom-2 "Alt+Tab" -mesg "Alt+n: New Task | Alt+Tab: Switch View" -filter "${filter}" -p "Tasklist > " ${rofiopts})
+    tasklist=$(echo -e "< Exit\n---\n$(todo ls)" | rofi -dmenu -kb-custom-1 "Alt+n" -kb-custom-2 "Alt+Tab" -mesg "Alt+n: New Task | Alt+Tab: Switch View" -filter "${filter}" -p "Tasklist > ")
     tasklist_val=$?
     item=$(echo "${tasklist}" | awk '{ print $1 }')
     if [[ $tasklist_val -eq 1 ]]; then
