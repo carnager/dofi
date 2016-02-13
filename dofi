@@ -1,7 +1,7 @@
 #!/bin/bash
 
 todo () {
-    todo.sh "$@"
+    todo.sh -p "$@"
 }
 
 root="$HOME/Documents/todo"
@@ -14,39 +14,39 @@ if [[ ! -d "./.git" ]]; then
 fi
 
 main () {
-tasklist=$(echo -e "< Exit\n---\n$(todo ls)" | rofi -dmenu -kb-custom-1 "Alt+n" -mesg "Alt+n: New Task" -p "Tasklist > ")
-tasklist_val=$?
-item=$(echo "${tasklist}" | awk '{ print $1 }')
-if [[ $tasklist_val -eq 1 ]]; then
-    exit
-elif [[ $tasklist_val -eq 10 ]]; then
-    inputmenu=$(echo "" | rofi -dmenu -p "> " -mesg "Format: \"TODO NAME\" +PROJECT @CONTEXT")
-    todo a "${inputmenu}"
-    gitHook
-    main
-else
-    if [[ $tasklist == "< Exit" ]]; then
+    tasklist=$(echo -e "< Exit\n---\n$(todo ls)" | rofi -dmenu -kb-custom-1 "Alt+n" -mesg "Alt+n: New Task" -p "Tasklist > ")
+    tasklist_val=$?
+    item=$(echo "${tasklist}" | awk '{ print $1 }')
+    if [[ $tasklist_val -eq 1 ]]; then
         exit
+    elif [[ $tasklist_val -eq 10 ]]; then
+        inputmenu=$(echo "" | rofi -dmenu -p "> " -mesg "Format: \"TODO NAME\" +PROJECT @CONTEXT")
+        todo a "${inputmenu}"
+        gitHook
+        main
     else
-        actions
+        if [[ $tasklist == "< Exit" ]]; then
+            exit
+        else
+            actions
+        fi
     fi
-fi
 }
 
 actions () {
     url=$(cat "${root}/notes/${item}.url")
     if [[ -z $url ]]; then
-        actionlist=$(echo -e "< Return\n---\n1. Mark Done\n2. Archive\n3. Delete\n4. Associate URL" | rofi -dmenu -p "Actions for item ${item} > ")
+        actionlist=$(echo -e "< Return\n---\n1 Mark Done\n2 Archive\na3 Delete\n4 Set Priority\n5 Associate URL" | rofi -dmenu -p "Actions for item ${item} > ")
         actionlist_val=$?
     else
-        actionlist=$(echo -e "< Return\n---\n1. Mark Done\n2. Archive\n3. Delete\n4. Open URL\n5. Delete URL" | rofi -dmenu -mesg "Detected URL: ${url}" -p "Actions for item ${item} > ")
+        actionlist=$(echo -e "< Return\n---\n1 Mark Done\n2 Archive\n3 Delete\n4 Set Priority\n5 Open URL\n6 Delete URL" | rofi -dmenu -mesg "Detected URL: ${url}" -p "Actions for item ${item} > ")
         actionlist_val=$?
     fi
 
     if [[ $actionlist_val -eq 1 ]]; then exit
     else
 
-    if [[ $actionlist == "1. Mark Done" ]]; then
+    if [[ $actionlist == "1 Mark Done" ]]; then
         todo 'do' "${item}"
         gitHook
         main
@@ -54,12 +54,12 @@ actions () {
     elif [[ $actionlist == "< Return" ]]; then
         main
 
-    elif [[ $actionlist == "2. Archive" ]]; then
+    elif [[ $actionlist == "2 Archive" ]]; then
         todo archive "${item}"
         gitHook
         main
 
-    elif [[ $actionlist == "3. Delete" ]]; then
+    elif [[ $actionlist == "3 Delete" ]]; then
         askmenu=$(echo -e "1. Yes\n2. No" | rofi -dmenu -p "Delete item ${item}? > ")
         if [[ $askmenu == "1. Yes" ]]; then
             yes | todo del "${item}";
@@ -69,7 +69,18 @@ actions () {
         elif [[ $askmenu == "2. No" ]]; then
             actions
         fi
-    elif [[ $actionlist == "4. Associate URL" ]]; then
+
+    elif [[ $actionlist == "4 Set Priority" ]]; then
+        prio_menu=$(echo -e "< Return\n---\nA\nB\nC\nD\nE" | rofi -dmenu -p "Priority > ")
+        if [[ $prio_menu == "< Return" ]]; then
+            actions
+        else
+            todo p "${item}" "${prio_menu}"
+            gitHook
+            actions
+        fi
+
+    elif [[ $actionlist == "5 Associate URL" ]]; then
         urlinput=$(echo "" | rofi -dmenu -mesg "Enter URL" -p "> ")
         urlintput_val=$?
         if [[ $urlinput_val -eq 1 ]]; then exit
@@ -77,8 +88,10 @@ actions () {
         gitHook
         actions
         fi
-    elif [[ $actionlist == "4. Open URL" ]]; then
+
+    elif [[ $actionlist == "5 Open URL" ]]; then
         "$BROWSER" "${url}"
+
     elif [[ $actionlist == "5. Delete URL" ]]; then
         askmenu=$(echo -e "1. Yes\n2. No" | rofi -dmenu -p "Delete item ${item}? > ")
         if [[ $askmenu == "1. Yes" ]]; then
