@@ -36,8 +36,8 @@ main () {
         elif [[ $taskview_menu == "2 List Projects" ]]; then
             proj_menu=$(echo -e "< Return\n---\n$(todo ls | grep -ow '+\w*' | uniq)" | roficmd -dmenu -p "Projects > ")
             proj_menu_val=$?
-            if [[ $proj_menu_val -eq 1 ]]; then exit
-            elif [[ $proj_menu_val == "< Return" ]]; then
+            if [[ $proj_menu_val -eq 1 ]]; then exit; fi
+            if [[ $proj_menu == "< Return" ]]; then
                 main
             else
                 filter="${proj_menu}" main
