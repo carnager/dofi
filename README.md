@@ -15,7 +15,6 @@ rofi UI for todo.txt
 # TODO
 
 * Projects management
-* config file
 
 # Dependencies:
 
@@ -27,5 +26,6 @@ rofi UI for todo.txt
 
 # Installation
 
-3. Copy dofi to $PATH
-4. Run dofi
+1. Copy dofi to $PATH
+2. Copy dofi.config to $HOME/.config/dofi/config
+3. Run dofi
