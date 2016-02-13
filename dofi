@@ -1,6 +1,9 @@
 #!/bin/bash
 
-todo=$(todo.sh)
+todo () {
+    todo.sh "$@"
+}
+
 root="$HOME/Documents/todo"
 export EDITOR="gvim -f"
 BROWSER="chromium"
@@ -11,14 +14,14 @@ if [[ ! -d "./.git" ]]; then
 fi
 
 main () {
-tasklist=$(echo -e "< Exit\n---\n$(todo.sh ls)" | rofi -dmenu -kb-custom-1 "Alt+n" -mesg "Alt+n: New Task" -p "Tasklist > ")
+tasklist=$(echo -e "< Exit\n---\n$(todo ls)" | rofi -dmenu -kb-custom-1 "Alt+n" -mesg "Alt+n: New Task" -p "Tasklist > ")
 tasklist_val=$?
 item=$(echo "${tasklist}" | awk '{ print $1 }')
 if [[ $tasklist_val -eq 1 ]]; then
     exit
 elif [[ $tasklist_val -eq 10 ]]; then
     inputmenu=$(echo "" | rofi -dmenu -p "> " -mesg "Format: \"TODO NAME\" +PROJECT @CONTEXT")
-    todo.sh a "${inputmenu}"
+    todo a "${inputmenu}"
     gitHook
     main
 else
@@ -44,7 +47,7 @@ actions () {
     else
 
     if [[ $actionlist == "1. Mark Done" ]]; then
-        todo.sh 'do' "${item}"
+        todo 'do' "${item}"
         gitHook
         main
 
@@ -52,14 +55,14 @@ actions () {
         main
 
     elif [[ $actionlist == "2. Archive" ]]; then
-        todo.sh archive "${item}"
+        todo archive "${item}"
         gitHook
         main
 
     elif [[ $actionlist == "3. Delete" ]]; then
         askmenu=$(echo -e "1. Yes\n2. No" | rofi -dmenu -p "Delete item ${item}? > ")
         if [[ $askmenu == "1. Yes" ]]; then
-            yes | todo.sh del "${item}";
+            yes | todo del "${item}";
             rm "${root}/notes/${item}" > /dev/null
             gitHook
             main
