@@ -1,13 +1,10 @@
 #!/bin/bash
 
-todo () {
-    todo.sh -p "$@"
-}
+source $HOME/.config/dofi/config
 
-root="$HOME/Documents/todo"
-export EDITOR="gvim -f"
-BROWSER="chromium"
-EDITOR="gvim -f"
+todo () {
+    ${todo_bin} -p "$@"
+}
 
 cd "${root}"
 if [[ ! -d "./.git" ]]; then
