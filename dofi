@@ -99,9 +99,15 @@ Note Head:    $(head -1 ${root}/notes/${item}.note)"
         fi
 
     elif [[ $actionlist == "4 Set Priority" ]]; then
-        prio_menu=$(echo -e "< Return\n---\nA\nB\nC\nD\nE" | rofi -dmenu -p "Priority > ")
+        prio_menu=$(echo -e "< Return\n---\nA\nB\nC\nD\nE\nUnset Priority" | rofi -dmenu -p "Priority > ")
         if [[ $prio_menu == "< Return" ]]; then
             actions
+
+        elif [[ $prio_menu == "Unset Priority" ]]; then
+            todo dp "${item}"
+            gitHook
+            actions
+
         else
             todo p "${item}" "${prio_menu}"
             gitHook
