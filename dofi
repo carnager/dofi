@@ -16,7 +16,7 @@ fi
 
 
 main () {
-    tasklist=$(echo -e "< Exit\n---\n$(todo ls)" | rofi -dmenu -kb-custom-1 "Alt+n" -kb-custom-2 "Alt+Tab" -mesg "Alt+n: New Task | Alt+Tab: Switch View" -p "Tasklist > ")
+    tasklist=$(echo -e "< Exit\n---\n$(todo ls)" | rofi -dmenu -kb-custom-1 "Alt+n" -kb-custom-2 "Alt+Tab" -mesg "Alt+n: New Task | Alt+Tab: Switch View" -filter "${filter}" -p "Tasklist > ")
     tasklist_val=$?
     item=$(echo "${tasklist}" | awk '{ print $1 }')
     if [[ $tasklist_val -eq 1 ]]; then
@@ -27,7 +27,7 @@ main () {
         gitHook
         main
     elif [[ $tasklist_val -eq 11 ]]; then
-        taskview_menu=$(echo -e "1 Show tasks by Priority\n2 Switch Tasks file" | rofi -dmenu -p "View > ")
+        taskview_menu=$(echo -e "1 Show tasks by Priority\n2 List Projects" | rofi -dmenu -p "View > ")
         if [[ $taskview_menu == "1 Show tasks by Priority" ]]; then
             prio_view_menu=$(echo -e "< Return\n---\n$(todo lsp)" | rofi -dmenu -p "Tasks by Priority > ")
             if [[ $prio_view_menu == "< Return" ]]; then
@@ -35,6 +35,15 @@ main () {
             else
                 item=$(echo "${prio_view_menu}" | awk '{ print $1 }')
                 actions
+            fi
+        elif [[ $taskview_menu == "2 List Projects" ]]; then
+            proj_menu=$(echo -e "< Return\n---\n$(todo ls | grep -ow '+\w*' | uniq)" | rofi -dmenu -p "Projects > ")
+            proj_menu_val=$?
+            if [[ $proj_menu_val -eq 1 ]]; then exit
+            elif [[ $proj_menu_val == "< Return" ]]; then
+                main
+            else
+                filter="${proj_menu}" main
             fi
         fi
     else
@@ -47,26 +56,26 @@ main () {
 }
 
 actions () {
-    url=$(cat "${root}/notes/${item}.url")
-    note=$(cat "${root}/notes/${item}.note")
+    url=$(cat "${root}/notes/${item}.url" 2> /dev/null)
+    note=$(cat "${root}/notes/${item}.note" 2> /dev/null )
     if [[ -z $url ]]; then
         if [[ -z $note ]]; then
-            actionlist=$(echo -e "< Return\n---\n1 Mark Done\n2 Archive\n3 Delete\n4 Set Priority\n5 Associate URL\n9 Add Note" | rofi -dmenu -p "Actions for item ${item} > ")
+            actionlist=$(echo -e "< Return\n---\n1 Mark Done\n2 Archive\n3 Delete\n4 Set Priority\n---\n5 Associate URL\n9 Add Note" | rofi -dmenu -p "Actions for item ${item} > ")
             actionlist_val=$?
 
         elif  [[ -n $note ]]; then
-            actionlist=$(echo -e "< Return\n---\n1 Mark Done\n2 Archive\n3 Delete\n4 Set Priority\n5 Associate URL\n8 View Note\n9 Edit Note\n0 Delete Note" | rofi -dmenu -mesg "$(echo ${note} | head -1)" -p "Actions for item ${item} > ")
+            actionlist=$(echo -e "< Return\n---\n1 Mark Done\n2 Archive\n3 Delete\n4 Set Priority\n---\n5 Associate URL\n---\n8 View Note\n9 Edit Note\n0 Delete Note" | rofi -dmenu -mesg "$(echo ${note} | head -1)" -p "Actions for item ${item} > ")
             actionlist_val=$?
         fi
     elif [[ -n $url ]]; then
         if [[ -z $note ]]; then
-            actionlist=$(echo -e "< Return\n---\n1 Mark Done\n2 Archive\n3 Delete\n4 Set Priority\n5 Open URL\n6 Delete URL\n9 Add Note" | rofi -dmenu -mesg "Detected URL: ${url}" -p "Actions for item ${item} > ")
+            actionlist=$(echo -e "< Return\n---\n1 Mark Done\n2 Archive\n3 Delete\n4 Set Priority\n---\n5 Open URL\n6 Delete URL\n---\n9 Add Note" | rofi -dmenu -mesg "Detected URL: ${url}" -p "Actions for item ${item} > ")
             actionlist_val=$?
 
         elif  [[ -n $note ]]; then
             message="Detected URL: ${url}
 Note Head:    $(head -1 ${root}/notes/${item}.note)"
-            actionlist=$(echo -e "< Return\n---\n1 Mark Done\n2 Archive\n3 Delete\n4 Set Priority\n5 Open URL\n6 Delete URL\n8 View Note\n9 Edit Note\n0 Delete Note" | rofi -dmenu -mesg "${message}" -p "Actions for item ${item} > ")
+            actionlist=$(echo -e "< Return\n---\n1 Mark Done\n2 Archive\n3 Delete\n4 Set Priority\n---\n5 Open URL\n6 Delete URL\n---\n8 View Note\n9 Edit Note\n0 Delete Note" | rofi -dmenu -mesg "${message}" -p "Actions for item ${item} > ")
             actionlist_val=$?
         fi
     fi
