@@ -55,15 +55,19 @@ actions () {
             actionlist_val=$?
 
         elif  [[ -n $note ]]; then
-            actionlist=$(echo -e "< Return\n---\n1 Mark Done\n2 Archive\n3 Delete\n4 Set Priority\n5 Associate URL\n8 View Note\n9 Edit Note\n0 Delete Note" | rofi -dmenu -p "Actions for item ${item} > ")
+            actionlist=$(echo -e "< Return\n---\n1 Mark Done\n2 Archive\n3 Delete\n4 Set Priority\n5 Associate URL\n8 View Note\n9 Edit Note\n0 Delete Note" | rofi -dmenu -mesg "$(echo ${note} | head -1)" -p "Actions for item ${item} > ")
             actionlist_val=$?
         fi
     elif [[ -n $url ]]; then
         if [[ -z $note ]]; then
             actionlist=$(echo -e "< Return\n---\n1 Mark Done\n2 Archive\n3 Delete\n4 Set Priority\n5 Open URL\n6 Delete URL\n9 Add Note" | rofi -dmenu -mesg "Detected URL: ${url}" -p "Actions for item ${item} > ")
-        actionlist_val=$?
+            actionlist_val=$?
+
         elif  [[ -n $note ]]; then
-            actionlist=$(echo -e "< Return\n---\n1 Mark Done\n2 Archive\n3 Delete\n4 Set Priority\n5 Open URL\n6 Delete URL\n8 View Note\n9 Edit Note\n0 Delete Note" | rofi -dmenu -mesg "Detected URL: ${url}" -p "Actions for item ${item} > ")
+            message="Detected URL: ${url}
+Note Head:    $(head -1 ${root}/notes/${item}.note)"
+            actionlist=$(echo -e "< Return\n---\n1 Mark Done\n2 Archive\n3 Delete\n4 Set Priority\n5 Open URL\n6 Delete URL\n8 View Note\n9 Edit Note\n0 Delete Note" | rofi -dmenu -mesg "${message}" -p "Actions for item ${item} > ")
+            actionlist_val=$?
         fi
     fi
 
