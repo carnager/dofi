@@ -115,9 +115,18 @@ Note Head:    $(head -1 ${root}/notes/${item}.note)"
         fi
 
     elif [[ $actionlist == "9 Add Note" || $actionlist == "9 Edit Note" ]]; then
-        ${EDITOR} "${root}/notes/${item}.note"
-        gitHook
-        actions
+        notemenu=$(echo -e "< Return\n1 Use Editor" | rofi -dmenu -p "Set Note > " -mesg "Type Note or select below")
+        if [[ $notemenu == "< Return" ]]; then
+            actions
+        elif [[ $notemenu == "1 Use Editor" ]]; then
+            ${EDITOR} "${root}/notes/${item}.note"
+            gitHook
+            actions
+        else
+            echo -e "${notemenu}" > "${root}/notes/${item}.note"
+            gitHook
+            actions
+        fi
 
     elif [[ $actionlist == "8 View Note" ]]; then
         noteview=$(echo -e "< Return\n---\n${note}" | rofi -dmenu -p "Note for item ${item} > ")
