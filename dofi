@@ -60,6 +60,7 @@ actions () {
         askmenu=$(echo -e "1. Yes\n2. No" | rofi -dmenu -p "Delete item ${item}? > ")
         if [[ $askmenu == "1. Yes" ]]; then
             yes | todo.sh del "${item}";
+            rm "${root}/notes/${item}" > /dev/null
             gitHook
             main
         elif [[ $askmenu == "2. No" ]]; then
@@ -76,9 +77,14 @@ actions () {
     elif [[ $actionlist == "4. Open URL" ]]; then
         "$BROWSER" "${url}"
     elif [[ $actionlist == "5. Delete URL" ]]; then
-        rm "${root}/notes/${item}.url"
-        gitHook
-        actions
+        askmenu=$(echo -e "1. Yes\n2. No" | rofi -dmenu -p "Delete item ${item}? > ")
+        if [[ $askmenu == "1. Yes" ]]; then
+            rm "${root}/notes/${item}.url"
+            gitHook
+            actions
+        elif [[ $askmenu == "2. No" ]]; then
+            actions
+        fi
     else
         actions
     fi
