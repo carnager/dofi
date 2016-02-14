@@ -25,7 +25,7 @@ main () {
         gitHook
         main
     elif [[ $tasklist_val -eq 11 ]]; then
-        taskview_menu=$(echo -e "1 Show tasks by Priority\n2 List Projects" | roficmd -dmenu -p "View > ")
+        taskview_menu=$(echo -e "< Return\n---\n1 Show tasks by Priority\n2 List Projects\n3 List Tags" | roficmd -dmenu -p "View > ")
         if [[ $taskview_menu == "1 Show tasks by Priority" ]]; then
             prio_view_menu=$(echo -e "< Return\n---\n$(todo lsp)" | roficmd -dmenu -p "Tasks by Priority > ")
             if [[ $prio_view_menu == "< Return" ]]; then
@@ -35,7 +35,7 @@ main () {
                 actions
             fi
         elif [[ $taskview_menu == "2 List Projects" ]]; then
-            proj_menu=$(echo -e "< Return\n---\n$(todo ls | grep -ow '+\w*' | uniq)" | roficmd -dmenu -p "Projects > ")
+            proj_menu=$(echo -e "< Return\n---\n$(todo ls | grep -ow '+\w*' | sort | uniq)" | roficmd -dmenu -p "Projects > ")
             proj_menu_val=$?
             if [[ $proj_menu_val -eq 1 ]]; then exit; fi
             if [[ $proj_menu == "< Return" ]]; then
@@ -43,6 +43,17 @@ main () {
             else
                 filter="${proj_menu}" main
             fi
+        elif [[ $taskview_menu == "3 List Tags" ]]; then
+            tags_menu=$(echo -e "< Return\n---\n$(todo ls | grep -ow '@\w*' | sort | uniq)" | roficmd -dmenu -p "Tags > ")
+            tags_menu_val=$?
+            if [[ $tags_menu_val -eq 1 ]]; then exit; fi
+            if [[ $tags_menu == "< Return" ]]; then
+                main
+            else
+                filter="${tags_menu}" main
+            fi
+        elif [[ $taskview_menu == "< Return" ]]; then
+            main
         fi
     else
         if [[ $tasklist == "< Exit" ]]; then
