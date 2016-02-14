@@ -13,9 +13,10 @@ fi
 
 
 main () {
-    tasklist=$(echo -e "< Exit\n---\n$(todo ls)" | roficmd -dmenu -kb-custom-1 "Alt+n" -kb-custom-2 "Alt+Tab" -mesg "Alt+n: New Task | Alt+Tab: Switch View" -filter "${filter}" -p "Tasklist > ")
+    tasklist=$(echo -e "< Exit\n---\n$(todo ls)" |roficmd -dmenu -kb-custom-1 "Alt+n" -kb-custom-2 "Alt+Tab" -mesg "Alt+n: New Task | Alt+Tab: Switch View" -filter "${filter}" -p "Tasklist > ")
     tasklist_val=$?
-    item=$(echo "${tasklist}" | awk '{ print $1 }')
+
+    item=$(echo "${tasklist}" | sed 's/^0*//' | awk '{ print $1 }')
     if [[ $tasklist_val -eq 1 ]]; then
         exit
     elif [[ $tasklist_val -eq 10 ]]; then
@@ -30,7 +31,7 @@ main () {
             if [[ $prio_view_menu == "< Return" ]]; then
                 main
             else
-                item=$(echo "${prio_view_menu}" | awk '{ print $1 }')
+                item=$(echo "${prio_view_menu}" | sed 's/^0*//' | awk '{ print $1 }')
                 actions
             fi
         elif [[ $taskview_menu == "2 List Projects" ]]; then
