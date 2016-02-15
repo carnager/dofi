@@ -94,6 +94,7 @@ Note Preview: $(head -1 ${root}/notes/${item}.note)"
 
     if [[ $actionlist == "1 Mark Done" ]]; then
         todo 'do' "${item}"
+        rm "${root}/notes/${item}.*" > /dev/null
         gitHook
         main
 
