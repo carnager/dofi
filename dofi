@@ -109,7 +109,7 @@ Note Preview: $(head -1 ${root}/notes/${item}.note)"
         askmenu=$(echo -e "1. Yes\n2. No" | roficmd -dmenu -p "Delete item ${item}? > ")
         if [[ $askmenu == "1. Yes" ]]; then
             yes | todo del "${item}";
-            rm "${root}/notes/${item}" > /dev/null
+            rm "${root}/notes/${item}.*" > /dev/null
             gitHook
             main
         elif [[ $askmenu == "2. No" ]]; then
