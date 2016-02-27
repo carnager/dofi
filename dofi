@@ -129,7 +129,7 @@ Note Preview: $(head -1 ${root}/notes/${item}.note)"
 
         else
             todo p "${item}" "${prio_menu}"
-            text="Set priority ${prio_menu} to item ${item}" gitHook
+            text="Set priority for item ${item} to ${prio_menu}" gitHook
             actions
         fi
 
