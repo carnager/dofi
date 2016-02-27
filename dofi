@@ -22,7 +22,7 @@ main () {
     elif [[ $tasklist_val -eq 10 ]]; then
         inputmenu=$(echo "" | roficmd -dmenu -p "> " -mesg "Format: \"TODO NAME\" +PROJECT @CONTEXT")
         todo a "${inputmenu}"
-        gitHook
+        text="Added item ${item}" gitHook
         main
     elif [[ $tasklist_val -eq 11 ]]; then
         taskview_menu=$(echo -e "< Return\n---\n1 Show tasks by Priority\n2 List Projects\n3 List Tags" | roficmd -dmenu -p "View > ")
@@ -95,7 +95,7 @@ Note Preview: $(head -1 ${root}/notes/${item}.note)"
     if [[ $actionlist == "1 Mark Done" ]]; then
         todo 'do' "${item}"
         rm "${root}/notes/${item}.*" > /dev/null
-        gitHook
+        text="Marked item ${item} as DONE" gitHook
         main
 
     elif [[ $actionlist == "< Return" ]]; then
@@ -103,7 +103,7 @@ Note Preview: $(head -1 ${root}/notes/${item}.note)"
 
     elif [[ $actionlist == "2 Archive" ]]; then
         todo archive "${item}"
-        gitHook
+        text="Archived item ${item}" gitHook
         main
 
     elif [[ $actionlist == "3 Delete" ]]; then
@@ -111,7 +111,7 @@ Note Preview: $(head -1 ${root}/notes/${item}.note)"
         if [[ $askmenu == "1. Yes" ]]; then
             yes | todo del "${item}";
             rm "${root}/notes/${item}.*" > /dev/null
-            gitHook
+            text="Deleted item ${item}" gitHook
             main
         elif [[ $askmenu == "2. No" ]]; then
             actions
@@ -124,12 +124,12 @@ Note Preview: $(head -1 ${root}/notes/${item}.note)"
 
         elif [[ $prio_menu == "Unset Priority" ]]; then
             todo dp "${item}"
-            gitHook
+            text="Removed priority from item ${item}" gitHook
             actions
 
         else
             todo p "${item}" "${prio_menu}"
-            gitHook
+            text="Set priority ${prio_menu} to item ${item}" gitHook
             actions
         fi
 
@@ -139,11 +139,11 @@ Note Preview: $(head -1 ${root}/notes/${item}.note)"
             actions
         elif [[ $notemenu == "1 Use Editor" ]]; then
             ${EDITOR} "${root}/notes/${item}.note"
-            gitHook
+            text="Added note to item ${item}" gitHook
             actions
         else
             echo -e "${notemenu}" > "${root}/notes/${item}.note"
-            gitHook
+            text="Added note to item ${item}" gitHook
             actions
         fi
 
@@ -160,6 +160,7 @@ Note Preview: $(head -1 ${root}/notes/${item}.note)"
 
     elif [[ $actionlist == "0 Delete Note" ]]; then
         rm -f "${root}/notes/${item}.note"
+        text="Removed note from item ${item}" gitHook
         actions
 
     elif [[ $actionlist == "5 Associate URL" ]]; then
@@ -167,7 +168,7 @@ Note Preview: $(head -1 ${root}/notes/${item}.note)"
         urlintput_val=$?
         if [[ $urlinput_val -eq 1 ]]; then exit
         else echo "${urlinput}" > "${root}/notes/${item}.url";
-        gitHook
+        text="Added URL to item ${item}" gitHook
         actions
         fi
 
@@ -178,7 +179,7 @@ Note Preview: $(head -1 ${root}/notes/${item}.note)"
         askmenu=$(echo -e "1. Yes\n2. No" | roficmd -dmenu -p "Delete item ${item}? > ")
         if [[ $askmenu == "1. Yes" ]]; then
             rm "${root}/notes/${item}.url"
-            gitHook
+            text="Removed URL from item ${item}" gitHook
             actions
         elif [[ $askmenu == "2. No" ]]; then
             actions
@@ -192,7 +193,7 @@ Note Preview: $(head -1 ${root}/notes/${item}.note)"
 gitHook () {
     git add *
     git add notes/*
-    git commit -m "update"
+    git commit -m "${text}"
 }
 
 if [[ -z "$rofiopts" ]]; then
