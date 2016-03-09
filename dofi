@@ -13,10 +13,14 @@ fi
 
 
 main () {
+    totaltodos=$(todo.sh ls | tail -1 | awk -F ' ' '{ print $2 }')
+    pad=$(echo -n "${totaltodos}" | wc -c)
+
     tasklist=$(echo -e "< Exit\n---\n$(todo ls)" |roficmd -dmenu -kb-custom-1 "Alt+n" -kb-custom-2 "Alt+Tab" -mesg "Alt+n: New Task | Alt+Tab: Switch View" -filter "${filter}" -p "Tasklist > ")
     tasklist_val=$?
 
-    item=$(echo "${tasklist}" | sed 's/^0*//' | awk '{ print $1 }')
+    item_text=${tasklist}
+    item=$(echo "${item_text}" | sed 's/^0*//' | awk '{ print $1 }')
     if [[ $tasklist_val -eq 1 ]]; then
         exit
     elif [[ $tasklist_val -eq 10 ]]; then
@@ -65,28 +69,21 @@ main () {
 }
 
 actions () {
-    url=$(cat "${root}/notes/${item}.url" 2> /dev/null)
-    note=$(cat "${root}/notes/${item}.note" 2> /dev/null )
+    if [[ $(todo note show ${item}) == "TODO: Task ${item} has no note." ]]; then
+        unset url
+        unset url_filename
+    else
+        url=$(todo note show ${item})
+    fi
+
     if [[ -z $url ]]; then
-        if [[ -z $note ]]; then
-            actionlist=$(echo -e "< Return\n---\n1 Mark Done\n2 Archive\n3 Delete\n4 Set Priority\n---\n5 Associate URL\n9 Add Note" | roficmd -dmenu -p "Actions for item ${item} > ")
-            actionlist_val=$?
-
-        elif  [[ -n $note ]]; then
-            actionlist=$(echo -e "< Return\n---\n1 Mark Done\n2 Archive\n3 Delete\n4 Set Priority\n---\n5 Associate URL\n---\n8 View Note\n9 Edit Note\n0 Delete Note" | roficmd -dmenu -mesg "$(echo ${note} | head -1)" -p "Actions for item ${item} > ")
-            actionlist_val=$?
-        fi
+        actionlist=$(echo -e "< Return\n---\n1 Mark Done\n2 Archive\n3 Delete\n4 Set Priority\n---\n5 Associate URL\n9 Add Note" | roficmd -dmenu -p "Actions for item ${item} > ")
+        actionlist_val=$?
     elif [[ -n $url ]]; then
-        if [[ -z $note ]]; then
-            actionlist=$(echo -e "< Return\n---\n1 Mark Done\n2 Archive\n3 Delete\n4 Set Priority\n---\n5 Open URL\n6 Delete URL\n---\n9 Add Note" | roficmd -dmenu -mesg "Detected URL: ${url}" -p "Actions for item ${item} > ")
-            actionlist_val=$?
+        actionlist=$(echo -e "< Return\n---\n1 Mark Done\n2 Archive\n3 Delete\n4 Set Priority\n---\n5 Open URL\n6 Delete URL\n---\n9 Add Note" | roficmd -dmenu -mesg "Detected URL: ${url}" -p "Actions for item ${item} > ")
+        actionlist_val=$?
 
-        elif  [[ -n $note ]]; then
-            message="Detected URL: ${url}
-Note Preview: $(head -1 ${root}/notes/${item}.note)"
-            actionlist=$(echo -e "< Return\n---\n1 Mark Done\n2 Archive\n3 Delete\n4 Set Priority\n---\n5 Open URL\n6 Delete URL\n---\n8 View Note\n9 Edit Note\n0 Delete Note" | roficmd -dmenu -mesg "${message}" -p "Actions for item ${item} > ")
-            actionlist_val=$?
-        fi
+        message="Detected URL: ${url}"
     fi
 
     if [[ $actionlist_val -eq 1 ]]; then exit
@@ -94,7 +91,6 @@ Note Preview: $(head -1 ${root}/notes/${item}.note)"
 
     if [[ $actionlist == "1 Mark Done" ]]; then
         todo 'do' "${item}"
-        rm "${root}/notes/${item}.*" > /dev/null
         text="Marked item ${item} as DONE" gitHook
         main
 
@@ -110,7 +106,6 @@ Note Preview: $(head -1 ${root}/notes/${item}.note)"
         askmenu=$(echo -e "1. Yes\n2. No" | roficmd -dmenu -p "Delete item ${item}? > ")
         if [[ $askmenu == "1. Yes" ]]; then
             yes | todo del "${item}";
-            rm "${root}/notes/${item}.*" > /dev/null
             text="Deleted item ${item}" gitHook
             main
         elif [[ $askmenu == "2. No" ]]; then
@@ -133,52 +128,34 @@ Note Preview: $(head -1 ${root}/notes/${item}.note)"
             actions
         fi
 
-    elif [[ $actionlist == "9 Add Note" || $actionlist == "9 Edit Note" ]]; then
-        notemenu=$(echo -e "< Return\n1 Use Editor" | roficmd -dmenu -p "Set Note > " -mesg "Type Note or select below")
-        if [[ $notemenu == "< Return" ]]; then
-            actions
-        elif [[ $notemenu == "1 Use Editor" ]]; then
-            ${EDITOR} "${root}/notes/${item}.note"
-            text="Added note to item ${item}" gitHook
-            actions
-        else
-            echo -e "${notemenu}" > "${root}/notes/${item}.note"
-            text="Added note to item ${item}" gitHook
-            actions
-        fi
-
-    elif [[ $actionlist == "8 View Note" ]]; then
-        noteview=$(echo -e "< Return\n---\n${note}" | roficmd -dmenu -p "Note for item ${item} > ")
-        noteview_val=$?
-        if [[ $noteview_val -eq 1 ]]; then
-            exit
-        else
-            if [[ $noteview == "< Return" ]]; then
-                actions
-            fi
-        fi
-
-    elif [[ $actionlist == "0 Delete Note" ]]; then
-        rm -f "${root}/notes/${item}.note"
-        text="Removed note from item ${item}" gitHook
-        actions
-
     elif [[ $actionlist == "5 Associate URL" ]]; then
         urlinput=$(echo "" | roficmd -dmenu -mesg "Enter URL" -p "> ")
         urlintput_val=$?
+
         if [[ $urlinput_val -eq 1 ]]; then exit
-        else echo "${urlinput}" > "${root}/notes/${item}.url";
+        else
+            randomstring=$(date +%s | sha256sum | base64 | head -c 3 ; echo)
+            number=$(printf %0${pad}d ${item})
+            todo append ${item} "note:$(echo -n "${randomstring}.txt")"
+            url_filename=$(todo ls | grep -P "^${number}" | awk -F 'note:' '{ print $2 }' | sed -e 's/[[:space:]]*$//')
+
+            echo "${urlinput}" > "${root}/notes/${url_filename}";
         text="Added URL to item ${item}" gitHook
+        unset url_filename
         actions
         fi
 
     elif [[ $actionlist == "5 Open URL" ]]; then
         "$BROWSER" "${url}"
 
-    elif [[ $actionlist == "5. Delete URL" ]]; then
+    elif [[ $actionlist == "6 Delete URL" ]]; then
         askmenu=$(echo -e "1. Yes\n2. No" | roficmd -dmenu -p "Delete item ${item}? > ")
         if [[ $askmenu == "1. Yes" ]]; then
-            rm "${root}/notes/${item}.url"
+            number=$(printf %0${pad}d ${item})
+            update_text=$(todo.sh -p ls | grep -P "^${number}" | cut -d ' ' -f2- | sed 's/(A) //;s/(B) //;s/(C) //;s/(D) //;s/(E) //;s/(F) //' | sed 's/note:.*//')
+            todo replace "${item}" "${update_text}"
+            url_filename=$(todo ls | grep -P "^${number}" | awk -F 'note:' '{ print $2 }' | sed -e 's/[[:space:]]*$//')
+            rm "${root}/notes/${url_filename}"
             text="Removed URL from item ${item}" gitHook
             actions
         elif [[ $askmenu == "2. No" ]]; then
