@@ -77,10 +77,10 @@ actions () {
     fi
 
     if [[ -z $url ]]; then
-        actionlist=$(echo -e "< Return\n---\n1 Mark Done\n2 Archive\n3 Delete\n4 Set Priority\n---\n5 Associate URL\n9 Add Note" | roficmd -dmenu -p "Actions for item ${item} > ")
+        actionlist=$(echo -e "< Return\n---\n1 Mark Done\n2 Archive\n3 Delete\n4 Set Priority\n---\n5 Associate URL" | roficmd -dmenu -p "Actions for item ${item} > ")
         actionlist_val=$?
     elif [[ -n $url ]]; then
-        actionlist=$(echo -e "< Return\n---\n1 Mark Done\n2 Archive\n3 Delete\n4 Set Priority\n---\n5 Open URL\n6 Delete URL\n---\n9 Add Note" | roficmd -dmenu -mesg "Detected URL: ${url}" -p "Actions for item ${item} > ")
+        actionlist=$(echo -e "< Return\n---\n1 Mark Done\n2 Archive\n3 Delete\n4 Set Priority\n---\n5 Open URL\n6 Delete URL" | roficmd -dmenu -mesg "Detected URL: ${url}" -p "Actions for item ${item} > ")
         actionlist_val=$?
 
         message="Detected URL: ${url}"
