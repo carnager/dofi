@@ -10,7 +10,6 @@ rofi UI for todo.txt
 * Show your tasks (duh!)
 * Basic tasks management (mark done, delete, set priority)
 * Associate URLs with tasks (add, delete, open)
-* Associate notes with tasks (add, edit, delete)
 
 # TODO
 
