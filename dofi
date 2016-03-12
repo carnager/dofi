@@ -33,6 +33,7 @@ main () {
         if [[ $taskview_menu == "1 Show tasks by Priority" ]]; then
             prio_view_menu=$(echo -e "< Return\n---\n$(todo lsp)" | roficmd -dmenu -p "Tasks by Priority > ")
             if [[ $prio_view_menu == "< Return" ]]; then
+                unset filter
                 main
             else
                 item=$(echo "${prio_view_menu}" | sed 's/^0*//' | awk '{ print $1 }')
