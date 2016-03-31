@@ -26,8 +26,9 @@ main () {
     elif [[ $tasklist_val -eq 10 ]]; then
         inputmenu=$(echo "" | roficmd -dmenu -p "> " -mesg "Format: \"TODO NAME\" +PROJECT @CONTEXT")
         todo a "${inputmenu}"
-        text="Added item ${item}" gitHook
-        main
+        text="Added new todo" gitHook
+        item=$(todo list | grep "${inputmenu}" | awk '{ print $1 }')
+        actions
     elif [[ $tasklist_val -eq 11 ]]; then
         taskview_menu=$(echo -e "< Return\n---\n1 Show tasks by Priority\n2 List Projects\n3 List Tags" | roficmd -dmenu -p "View > ")
         if [[ $taskview_menu == "1 Show tasks by Priority" ]]; then
