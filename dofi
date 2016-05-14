@@ -15,12 +15,17 @@ source $HOME/.config/dofi/config
 cd "${noteroot}"
 
 listtodo () {
-    for i in *.todo; do sort "${i}" | awk -F ': ' '{ print $2 }' | tr '\n' '\t' | sed -e "s/$/                                                                                                                                       file: $i/"; echo; done | sort | column -s $'\t' -t
+    list=$(for i in *.todo; do sort "${i}" | awk -F ': ' '{ print $2 }' | tr '\n' '\t' | sed -e "s/$/                                                                                                                                       file: $i/"; echo; done | sort | column -s $'\t' -t)
+    high=$(echo "${list}" | grep -n "^1" | cut -f1 -d:)
+    high=$(echo "$high" | while read line; do echo $(( $line + 1 )); done | sed ':a;N;$!ba;s/\n/, /g')
+    medium=$(echo "${list}" | grep -n "^2" | cut -f1 -d:)
+    medium=$(echo "$medium" | while read line; do echo $(( $line + 1 )); done | sed ':a;N;$!ba;s/\n/, /g')
 }
 
 main () {
+    listtodo
     file=""
-    mainmenu=$(echo -e "< Exit\n---\n$(listtodo)" | _rofi -kb-custom-1 "Alt+n" -mesg "Alt+n: New" -dmenu -p "> ")
+    mainmenu=$(echo -e "< Exit\n---\n${list}" | _rofi -kb-custom-1 "Alt+n" -u "${high}" -a "${medium}" -mesg "Alt+n: New" -dmenu -p "> ")
     val=$?
     if [[ $val -eq 10 ]]; then
         newitem
@@ -157,7 +162,7 @@ setpriority () {
         file=$(echo ${mainmenu} | awk -F 'file: ' '{ print $2 }')
     fi
     title=$(awk -F 'caption: ' '{ print $2 }' "${noteroot}/${file}")
-    priomenu=$(echo -e "< Return\n---\n1\n2\n3\n4\n5" | _rofi -dmenu -p "> " -mesg "Set Priority for item ${title}")
+    priomenu=$(echo -e "< Return\n---\n1\n2\n3" | _rofi -dmenu -p "> " -mesg "Set Priority for item ${title}")
     val=$?
     if [[ $val -eq 1 ]]; then exit
     else
