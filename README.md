@@ -1,5 +1,5 @@
 # dofi
-rofi UI for todo.txt
+rofi UI for managing simple todos
 
 # Screenshot
 ![Screenshot]
@@ -11,15 +11,11 @@ rofi UI for todo.txt
 * Basic tasks management (mark done, delete, set priority)
 * Associate URLs with tasks (add, delete, open)
 
-# TODO
-
-* Projects management
-
 # Dependencies:
 
-* todo.sh (https://github.com/ginatrapani/todo.txt-cli)
 * awk
 * grep
+* sed
 * rofi
 
 # Installation
