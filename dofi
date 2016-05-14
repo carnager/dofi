@@ -1,7 +1,9 @@
 #!/usr/bin/env bash
 
 # default settings
-rofiopts="-line-margin 3 -width 700 -i -no-levenshtein-sort"
+_rofi () {
+    rofi -i -lines 30 -width 1500 -no-levenshtein-sort "$@"
+}
 noteroot="$HOME/Documents/bashtodo"
 done_notes="$HOME/Documents/bashtodo/done"
 BROWSER=chromium
@@ -18,7 +20,7 @@ listtodo () {
 
 main () {
     file=""
-    mainmenu=$(echo -e "< Exit\n---\n$(listtodo)" | rofi -kb-custom-1 "Alt+n" -mesg "Alt+n: New" -dmenu -p "> ")
+    mainmenu=$(echo -e "< Exit\n---\n$(listtodo)" | _rofi -kb-custom-1 "Alt+n" -mesg "Alt+n: New" -dmenu -p "> ")
     val=$?
     if [[ $val -eq 10 ]]; then
         newitem
@@ -32,7 +34,7 @@ main () {
 }
 
 newitem () {
-    title=$(echo -e "< Cancel" | rofi -dmenu -mesg "Title for new task" -p "> ")
+    title=$(echo -e "< Cancel" | _rofi -dmenu -mesg "Title for new task" -p "> ")
     val=$?
     if [[ $val -eq 1 ]]; then exit
     else
@@ -40,7 +42,7 @@ newitem () {
         else :
         fi
     fi
-    group=$(echo -e "< Cancel\n---\n$(grep -how '\+.*' *.todo | sort -u | sed 's/, /\n/g')" | rofi -dmenu -p "> " -mesg "Enter Group or chose one below")
+    group=$(echo -e "< Cancel\n---\n$(grep -how '\+.*' *.todo | sort -u | sed 's/, /\n/g')" | _rofi -dmenu -p "> " -mesg "Enter Group or chose one below")
     val=$?
     if [[ $val -eq 1 ]]; then exit
     else
@@ -48,7 +50,7 @@ newitem () {
         else :
         fi
     fi
-    tags=$(echo -e "< Cancel\n---\n$(grep -how '\@.*' *.todo | sed 's/, /\n/g' | sort -u)" | rofi -dmenu -p "> " -mesg "Enter Tags (comma separated) or chose below (Use Space+Enter to multi-select)")
+    tags=$(echo -e "< Cancel\n---\n$(grep -how '\@.*' *.todo | sed 's/, /\n/g' | sort -u)" | _rofi -dmenu -p "> " -mesg "Enter Tags (comma separated) or chose below (Use Space+Enter to multi-select)")
     val=$?
     if [[ $val -eq 1 ]]; then exit
     else
@@ -68,7 +70,7 @@ editmenu () {
         file=$(echo ${mainmenu} | awk -F 'file: ' '{ print $2 }')
     fi
     sort "${file}"
-    listitems=$(echo -e "< Return\n---\n$(sort ${noteroot}/${file})" | rofi -dmenu -p "> ")
+    listitems=$(echo -e "< Return\n---\n$(sort ${noteroot}/${file})" | _rofi -dmenu -p "> ")
     val=$?
     if [[ $val -eq 1 ]]; then exit
     else
@@ -77,7 +79,7 @@ editmenu () {
         else
             field=$(echo ${listitems} | awk -F ': ' '{ print $1 }')
             value=$(echo ${listitems} | awk -F ': ' '{ print $2 }')
-            inputmenu=$(echo "" | rofi -dmenu -p "> " -mesg "Enter new value for ${field}" -filter "${value}")
+            inputmenu=$(echo "" | _rofi -dmenu -p "> " -mesg "Enter new value for ${field}" -filter "${value}")
             val=$?
             if [[ $val -eq 1 ]]; then exit
             else
@@ -97,11 +99,11 @@ optionsmenu () {
     url=$(grep -P '^url: ' "${noteroot}/${file}" | awk -F 'url: ' '{ print $2 }')
     if [[ -z $url ]]; then
         HELP="Chose Option for item ${title}"
-        doopt=$(echo -e "< Return\n---\n1. Mark Done\n2. Delete\n3. Set Priority\n4. Edit\n---\n5. Add URL"| rofi -mesg "${HELP}" -dmenu -p "> ")
+        doopt=$(echo -e "< Return\n---\n1. Mark Done\n2. Delete\n3. Set Priority\n4. Edit\n---\n5. Add URL"| _rofi -mesg "${HELP}" -dmenu -p "> ")
     else
         HELP="Chose Option for item ${title}
 Detected URL: ${url}"
-        doopt=$(echo -e "< Return\n---\n1. Mark Done\n2. Delete\n3. Set Priority\n4. Edit\n---\n5. Open URL\n6. Delete URL"| rofi -mesg "${HELP}" -dmenu -p "> ")
+        doopt=$(echo -e "< Return\n---\n1. Mark Done\n2. Delete\n3. Set Priority\n4. Edit\n---\n5. Open URL\n6. Delete URL"| _rofi -mesg "${HELP}" -dmenu -p "> ")
     fi
     val=$?
     if [[ $val -eq 1 ]]; then exit
@@ -123,7 +125,7 @@ addURL () {
     if [[ -z $file ]]; then
         file=$(echo ${mainmenu} | awk -F 'file: ' '{ print $2 }')
     fi
-    urlmenu=$(echo -e "< Cancel" | rofi -dmenu -mesg "Add URL to ${title}" -p "> ")
+    urlmenu=$(echo -e "< Cancel" | _rofi -dmenu -mesg "Add URL to ${title}" -p "> ")
     echo "url: ${urlmenu}" >> "${noteroot}/${file}"
     optionsmenu
 }
@@ -132,7 +134,7 @@ delURL () {
     if [[ -z $file ]]; then
         file=$(echo ${mainmenu} | awk -F 'file: ' '{ print $2 }')
     fi
-    urlmenu=$(echo -e "1. Yes\n2. No" | rofi -dmenu -mesg "Delete URL ${url}?" -p "> ")
+    urlmenu=$(echo -e "1. Yes\n2. No" | _rofi -dmenu -mesg "Delete URL ${url}?" -p "> ")
     if [[ $urlmenu == "1. Yes" ]]; then sed -i '/^url: / d' "${noteroot}/${file}"
     elif [[ $urlmenu == "2. No" ]]; then :
     fi
@@ -143,7 +145,7 @@ delitem () {
     if [[ -z $file ]]; then
         file=$(echo ${mainmenu} | awk -F 'file: ' '{ print $2 }')
     fi
-    itemmenu=$(echo -e "1. Yes\n2. No" | rofi -dmenu -mesg "Delete item ${title}?" -p "> ")
+    itemmenu=$(echo -e "1. Yes\n2. No" | _rofi -dmenu -mesg "Delete item ${title}?" -p "> ")
     if [[ $itemmenu == "1. Yes" ]]; then rm -f "${noteroot}/${file}"
     elif [[ $itemmenu == "2. No" ]]; then :
     fi
@@ -155,7 +157,7 @@ setpriority () {
         file=$(echo ${mainmenu} | awk -F 'file: ' '{ print $2 }')
     fi
     title=$(awk -F 'caption: ' '{ print $2 }' "${noteroot}/${file}")
-    priomenu=$(echo -e "< Return\n---\n1\n2\n3\n4\n5" | rofi -dmenu -p "> " -mesg "Set Priority for item ${title}")
+    priomenu=$(echo -e "< Return\n---\n1\n2\n3\n4\n5" | _rofi -dmenu -p "> " -mesg "Set Priority for item ${title}")
     val=$?
     if [[ $val -eq 1 ]]; then exit
     else
