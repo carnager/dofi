@@ -107,8 +107,8 @@ Detected URL: ${url}"
     if [[ $val -eq 1 ]]; then exit
     else
         if [[ $doopt == "5. Open URL" ]]; then $BROWSER "${url}"
-        elif [[ $doopt == "1. Mark Done" ]]; then mv "${noteroot}/${file}" "${done_notes}"
-        elif [[ $doopt == "2. Delete" ]]; then rm -f "${noteroot}/${file}"
+        elif [[ $doopt == "1. Mark Done" ]]; then mv "${noteroot}/${file}" "${done_notes}"; optionsmenu
+        elif [[ $doopt == "2. Delete" ]]; then rm -f "${noteroot}/${file}"; optionsmenu
         elif [[ $doopt == "3. Set Priority" ]]; then setpriority
         elif [[ $doopt == "4. Edit" ]]; then editmenu
         elif [[ $doopt == "< Return" ]]; then main
