@@ -108,7 +108,7 @@ Detected URL: ${url}"
     else
         if [[ $doopt == "5. Open URL" ]]; then $BROWSER "${url}"
         elif [[ $doopt == "1. Mark Done" ]]; then mv "${noteroot}/${file}" "${done_notes}"; optionsmenu
-        elif [[ $doopt == "2. Delete" ]]; then rm -f "${noteroot}/${file}"; optionsmenu
+        elif [[ $doopt == "2. Delete" ]]; then delitem
         elif [[ $doopt == "3. Set Priority" ]]; then setpriority
         elif [[ $doopt == "4. Edit" ]]; then editmenu
         elif [[ $doopt == "< Return" ]]; then main
@@ -139,6 +139,17 @@ delURL () {
     optionsmenu
 }
     
+delitem () {
+    if [[ -z $file ]]; then
+        file=$(echo ${mainmenu} | awk -F 'file: ' '{ print $2 }')
+    fi
+    itemmenu=$(echo -e "1. Yes\n2. No" | rofi -dmenu -mesg "Delete item ${title}?" -p "> ")
+    if [[ $itemmenu == "1. Yes" ]]; then rm -f "${noteroot}/${file}"
+    elif [[ $itemmenu == "2. No" ]]; then :
+    fi
+    main
+}
+
 setpriority () {
     if [[ -z $file ]]; then
         file=$(echo ${mainmenu} | awk -F 'file: ' '{ print $2 }')
