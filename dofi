@@ -1,188 +1,198 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
+# default settings
+rofiopts="-line-margin 3 -width 700 -i -no-levenshtein-sort"
+noteroot="$HOME/Documents/bashtodo"
+done_notes="$HOME/Documents/bashtodo/done"
+BROWSER=chromium
+
+# load custom settings
 source $HOME/.config/dofi/config
 
-todo () {
-    ${todo_bin} -p "$@"
+# start script
+cd "${noteroot}"
+
+listtodo () {
+    for i in *.todo; do sort "${i}" | awk -F ': ' '{ print $2 }' | tr '\n' '\t' | sed -e "s/$/                                                                                                                                       file: $i/"; echo; done | sort | column -s $'\t' -t
 }
-
-cd "${root}"
-if [[ ! -d "./.git" ]]; then
-    git init
-fi
-
 
 main () {
-    totaltodos=$(todo.sh ls | tail -1 | awk -F ' ' '{ print $2 }')
-    pad=$(echo -n "${totaltodos}" | wc -c)
-
-    tasklist=$(echo -e "< Exit\n---\n$(todo ls)" |roficmd -dmenu -kb-custom-1 "Alt+n" -kb-custom-2 "Alt+Tab" -mesg "Alt+n: New Task | Alt+Tab: Switch View" -filter "${filter}" -p "Tasklist > ")
-    tasklist_val=$?
-
-    item_text=${tasklist}
-    item=$(echo "${item_text}" | sed 's/^0*//' | awk '{ print $1 }')
-    if [[ $tasklist_val -eq 1 ]]; then
-        exit
-    elif [[ $tasklist_val -eq 10 ]]; then
-        inputmenu=$(echo "" | roficmd -dmenu -p "> " -mesg "Format: \"TODO NAME\" +PROJECT @CONTEXT")
-        todo a "${inputmenu}"
-        text="Added new todo" gitHook
-        item=$(todo list | grep "${inputmenu}" | awk '{ print $1 }')
-        actions
-    elif [[ $tasklist_val -eq 11 ]]; then
-        taskview_menu=$(echo -e "< Return\n---\n1 Show tasks by Priority\n2 List Projects\n3 List Tags" | roficmd -dmenu -p "View > ")
-        if [[ $taskview_menu == "1 Show tasks by Priority" ]]; then
-            prio_view_menu=$(echo -e "< Return\n---\n$(todo lsp)" | roficmd -dmenu -p "Tasks by Priority > ")
-            if [[ $prio_view_menu == "< Return" ]]; then
-                unset filter
-                main
-            else
-                item=$(echo "${prio_view_menu}" | sed 's/^0*//' | awk '{ print $1 }')
-                actions
-            fi
-        elif [[ $taskview_menu == "2 List Projects" ]]; then
-            proj_menu=$(echo -e "< Return\n---\n$(todo ls | grep -ow '+\w*' | sort | uniq)" | roficmd -dmenu -p "Projects > ")
-            proj_menu_val=$?
-            if [[ $proj_menu_val -eq 1 ]]; then exit; fi
-            if [[ $proj_menu == "< Return" ]]; then
-                main
-            else
-                filter="${proj_menu}" main
-            fi
-        elif [[ $taskview_menu == "3 List Tags" ]]; then
-            tags_menu=$(echo -e "< Return\n---\n$(todo ls | grep -ow '@\w*' | sort | uniq)" | roficmd -dmenu -p "Tags > ")
-            tags_menu_val=$?
-            if [[ $tags_menu_val -eq 1 ]]; then exit; fi
-            if [[ $tags_menu == "< Return" ]]; then
-                main
-            else
-                filter="${tags_menu}" main
-            fi
-        elif [[ $taskview_menu == "< Return" ]]; then
-            main
-        fi
-    else
-        if [[ $tasklist == "< Exit" ]]; then
-            exit
-        else
-            actions
+    file=""
+    mainmenu=$(echo -e "< Exit\n---\n$(listtodo)" | rofi -kb-custom-1 "Alt+n" -mesg "Alt+n: New" -dmenu -p "> ")
+    val=$?
+    if [[ $val -eq 10 ]]; then
+        newitem
+    elif [[ $val -eq 1 ]]; then exit
+    elif [[ $val -eq 0 ]]; then
+        if [[ $mainmenu == "< Exit" ]]; then exit
+        elif [[ $mainmenu == "---" ]]; then main
+        else optionsmenu
         fi
     fi
 }
 
-actions () {
-    if [[ $(todo note show ${item}) == "TODO: Task ${item} has no note." ]]; then
-        unset url
-        unset url_filename
+newitem () {
+    title=$(echo -e "< Cancel" | rofi -dmenu -mesg "Title for new task" -p "> ")
+    val=$?
+    if [[ $val -eq 1 ]]; then exit
     else
-        url=$(todo note show ${item})
+        if [[ $title == "< Cancel" ]]; then main
+        else :
+        fi
     fi
+    group=$(echo -e "< Cancel\n---\n$(grep -how '\+.*' *.todo | sort -u | sed 's/, /\n/g')" | rofi -dmenu -p "> " -mesg "Enter Group or chose one below")
+    val=$?
+    if [[ $val -eq 1 ]]; then exit
+    else
+        if [[ $group == "< Cancel" ]]; then main
+        else :
+        fi
+    fi
+    tags=$(echo -e "< Cancel\n---\n$(grep -how '\@.*' *.todo | sed 's/, /\n/g' | sort -u)" | rofi -dmenu -p "> " -mesg "Enter Tags (comma separated) or chose below (Use Space+Enter to multi-select)")
+    val=$?
+    if [[ $val -eq 1 ]]; then exit
+    else
+        if [[ $tags == "< Cancel" ]]; then main
+        else :
+        fi
+    fi
+    tags=$(echo "$tags" | sed ':a;N;$!ba;s/\n/, /g' | sort | uniq)
+    newfile=$(date +'%Y-%m-%d-%H%M%S'.todo)
+    echo -e "abc: 3\ncaption: ${title}\ngroup: ${group}\ntags: ${tags}" >> "${noteroot}/${newfile}"
+    file=${newfile} optionsmenu
+}
+    
 
+editmenu () {
+    if [[ -z $file ]]; then
+        file=$(echo ${mainmenu} | awk -F 'file: ' '{ print $2 }')
+    fi
+    sort "${file}"
+    listitems=$(echo -e "< Return\n---\n$(sort ${noteroot}/${file})" | rofi -dmenu -p "> ")
+    val=$?
+    if [[ $val -eq 1 ]]; then exit
+    else
+        if [[ $listitem == "< Return" ]]; then main
+        elif [[ $listmenu == "---" ]]; then :
+        else
+            field=$(echo ${listitems} | awk -F ': ' '{ print $1 }')
+            value=$(echo ${listitems} | awk -F ': ' '{ print $2 }')
+            inputmenu=$(echo "" | rofi -dmenu -p "> " -mesg "Enter new value for ${field}" -filter "${value}")
+            val=$?
+            if [[ $val -eq 1 ]]; then exit
+            else
+                sed -i "/^${field}/ d" "${noteroot}/${file}"
+                echo "${field}: ${inputmenu}" >> "${noteroot}/${file}"
+            fi
+        fi
+    fi
+    main
+}
+
+optionsmenu () {
+    if [[ -z $file ]]; then
+        file=$(echo ${mainmenu} | awk -F 'file: ' '{ print $2 }')
+    fi
+    title=$(grep -P '^caption: ' "${noteroot}/${file}" | awk -F 'caption: ' '{ print $2 }')
+    url=$(grep -P '^url: ' "${noteroot}/${file}" | awk -F 'url: ' '{ print $2 }')
     if [[ -z $url ]]; then
-        actionlist=$(echo -e "< Return\n---\n1 Mark Done\n2 Archive\n3 Delete\n4 Set Priority\n---\n5 Associate URL" | roficmd -dmenu -p "Actions for item ${item} > ")
-        actionlist_val=$?
-    elif [[ -n $url ]]; then
-        actionlist=$(echo -e "< Return\n---\n1 Mark Done\n2 Archive\n3 Delete\n4 Set Priority\n---\n5 Open URL\n6 Delete URL" | roficmd -dmenu -mesg "Detected URL: ${url}" -p "Actions for item ${item} > ")
-        actionlist_val=$?
-
-        message="Detected URL: ${url}"
-    fi
-
-    if [[ $actionlist_val -eq 1 ]]; then exit
+        HELP="Chose Option for item ${title}"
+        doopt=$(echo -e "< Return\n---\n1. Mark Done\n2. Delete\n3. Set Priority\n4. Edit\n---\n5. Add URL"| rofi -mesg "${HELP}" -dmenu -p "> ")
     else
-
-    if [[ $actionlist == "1 Mark Done" ]]; then
-        todo 'do' "${item}"
-        text="Marked item ${item} as DONE" gitHook
-        main
-
-    elif [[ $actionlist == "< Return" ]]; then
-        main
-
-    elif [[ $actionlist == "2 Archive" ]]; then
-        todo archive "${item}"
-        text="Archived item ${item}" gitHook
-        main
-
-    elif [[ $actionlist == "3 Delete" ]]; then
-        askmenu=$(echo -e "1. Yes\n2. No" | roficmd -dmenu -p "Delete item ${item}? > ")
-        if [[ $askmenu == "1. Yes" ]]; then
-            yes | todo del "${item}";
-            text="Deleted item ${item}" gitHook
-            main
-        elif [[ $askmenu == "2. No" ]]; then
-            actions
-        fi
-
-    elif [[ $actionlist == "4 Set Priority" ]]; then
-        prio_menu=$(echo -e "< Return\n---\nA\nB\nC\nD\nE\nUnset Priority" | roficmd -dmenu -p "Priority > ")
-        if [[ $prio_menu == "< Return" ]]; then
-            actions
-
-        elif [[ $prio_menu == "Unset Priority" ]]; then
-            todo dp "${item}"
-            text="Removed priority from item ${item}" gitHook
-            actions
-
-        else
-            todo p "${item}" "${prio_menu}"
-            text="Set priority for item ${item} to ${prio_menu}" gitHook
-            actions
-        fi
-
-    elif [[ $actionlist == "5 Associate URL" ]]; then
-        urlinput=$(echo "" | roficmd -dmenu -mesg "Enter URL" -p "> ")
-        urlintput_val=$?
-
-        if [[ $urlinput_val -eq 1 ]]; then exit
-        else
-            randomstring=$(date +%s | sha256sum | base64 | head -c 3 ; echo)
-            number=$(printf %0${pad}d ${item})
-            todo append ${item} "note:$(echo -n "${randomstring}.txt")"
-            url_filename=$(todo ls | grep -P "^${number}" | awk -F 'note:' '{ print $2 }' | sed -e 's/[[:space:]]*$//')
-
-            echo "${urlinput}" > "${root}/notes/${url_filename}";
-        text="Added URL to item ${item}" gitHook
-        unset url_filename
-        actions
-        fi
-
-    elif [[ $actionlist == "5 Open URL" ]]; then
-        "$BROWSER" "${url}"
-
-    elif [[ $actionlist == "6 Delete URL" ]]; then
-        askmenu=$(echo -e "1. Yes\n2. No" | roficmd -dmenu -p "Delete item ${item}? > ")
-        if [[ $askmenu == "1. Yes" ]]; then
-            number=$(printf %0${pad}d ${item})
-            update_text=$(todo.sh -p ls | grep -P "^${number}" | cut -d ' ' -f2- | sed 's/(A) //;s/(B) //;s/(C) //;s/(D) //;s/(E) //;s/(F) //' | sed 's/note:.*//')
-            todo replace "${item}" "${update_text}"
-            url_filename=$(todo ls | grep -P "^${number}" | awk -F 'note:' '{ print $2 }' | sed -e 's/[[:space:]]*$//')
-            rm "${root}/notes/${url_filename}"
-            text="Removed URL from item ${item}" gitHook
-            actions
-        elif [[ $askmenu == "2. No" ]]; then
-            actions
-        fi
-    else
-        actions
+        HELP="Chose Option for item ${title}
+Detected URL: ${url}"
+        doopt=$(echo -e "< Return\n---\n1. Mark Done\n2. Delete\n3. Set Priority\n4. Edit\n---\n5. Open URL\n6. Delete URL"| rofi -mesg "${HELP}" -dmenu -p "> ")
     fi
+    val=$?
+    if [[ $val -eq 1 ]]; then exit
+    else
+        if [[ $doopt == "5. Open URL" ]]; then $BROWSER "${url}"
+        elif [[ $doopt == "1. Mark Done" ]]; then mv "${noteroot}/${file}" "${done_notes}"
+        elif [[ $doopt == "2. Delete" ]]; then rm -f "${noteroot}/${file}"
+        elif [[ $doopt == "3. Set Priority" ]]; then setpriority
+        elif [[ $doopt == "4. Edit" ]]; then editmenu
+        elif [[ $doopt == "< Return" ]]; then main
+        elif [[ $doopt == "5. Add URL" ]]; then addURL
+        elif [[ $doopt == "6. Delete URL" ]]; then delURL
+        elif [[ $doopt == "---" ]]; then optionsmenu
+        fi
     fi
 }
 
-gitHook () {
-    git add *
-    git add notes/*
-    git commit -m "${text}"
+addURL () {
+    if [[ -z $file ]]; then
+        file=$(echo ${mainmenu} | awk -F 'file: ' '{ print $2 }')
+    fi
+    urlmenu=$(echo -e "< Cancel" | rofi -dmenu -mesg "Add URL to ${title}" -p "> ")
+    echo "url: ${urlmenu}" >> "${noteroot}/${file}"
+    optionsmenu
 }
 
-if [[ -z "$rofiopts" ]]; then
-    roficmd () {
-        rofi -dmenu "$@"
-    }
+delURL () {
+    if [[ -z $file ]]; then
+        file=$(echo ${mainmenu} | awk -F 'file: ' '{ print $2 }')
+    fi
+    urlmenu=$(echo -e "1. Yes\n2. No" | rofi -dmenu -mesg "Delete URL ${url}?" -p "> ")
+    if [[ $urlmenu == "1. Yes" ]]; then sed -i '/^url: / d' "${noteroot}/${file}"
+    elif [[ $urlmenu == "2. No" ]]; then :
+    fi
+    optionsmenu
+}
+    
+setpriority () {
+    if [[ -z $file ]]; then
+        file=$(echo ${mainmenu} | awk -F 'file: ' '{ print $2 }')
+    fi
+    title=$(awk -F 'caption: ' '{ print $2 }' "${noteroot}/${file}")
+    priomenu=$(echo -e "< Return\n---\n1\n2\n3\n4\n5" | rofi -dmenu -p "> " -mesg "Set Priority for item ${title}")
+    val=$?
+    if [[ $val -eq 1 ]]; then exit
+    else
+        if [[ $priomenu == "< Return" ]]; then optionsmenu
+        elif [[ $priomenu == "---" ]]; then setpriority
+        else
+            sed -i "/^abc: / d" "${noteroot}/${file}"
+            echo "abc: ${priomenu}" >> "${noteroot}/${file}"
+        fi
+    fi
+    optionsmenu
+}
+
+addtodo () {
+    if [[ $2 != "-caption" ]]; then
+        echo "Missing -name option."
+        exit
+    elif [[ $2 == "-caption" ]]; then
+        Name="$3"
+    fi
+    echo "Using Documentroot \"${noteroot}\""
+    OIFS=$IFS;
+    IFS="-";
+    fields="$@";
+    fieldsArray=($fields);
+
+    cd "${noteroot}"
+    
+    newfile=$(date +'%Y-%m-%d-%H%M%S'.todo)
+
+    for ((i=1; i<${#fieldsArray[@]}; ++i)); do
+        field=$(echo "${fieldsArray[$i]}" | awk -F' ' '{print $1}')
+        option=$(echo "${fieldsArray[$i]}" | cut -d ' ' -f 2- | sed -e 's/[[:blank:]]\+$//')
+        echo "$field: $option" >> "${noteroot}/${newfile}"
+    done
+    echo "abc: 3" >> "${noteroot}/${newfile}"
+}
+
+if [[ $1 == "--new" ]]; then
+    addtodo $@
 else
-    roficmd () {
-        rofi -dmenu $(echo "$rofiopts") "$@"
-    }
+    if [[ ! -d "$noteroot" ]]; then
+        echo "Error: Directory ${noteroot} does not exist"
+        exit
+    fi
+    if [[ ! -d "$done_notes" ]]; then
+        echo "Error: Directory ${done_notes} does not exist"
+        exit
+    fi
+    main
 fi
-
-main
