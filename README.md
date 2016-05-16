@@ -13,10 +13,11 @@ rofi UI for managing simple todos
 
 # Dependencies:
 
-* awk
+* gawk
 * grep
 * sed
 * rofi
+* linux-utils (column)
 
 # Installation
 
