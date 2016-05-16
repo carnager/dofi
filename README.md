@@ -18,6 +18,7 @@ rofi UI for managing simple todos
 * sed
 * rofi
 * linux-utils (column)
+* out2html (for pango formatting of urls)
 
 # Installation
 
