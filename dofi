@@ -78,9 +78,9 @@ editmenu () {
     listitems=$(echo -e "< Return\n---\n$(sort ${noteroot}/${file})" | _rofi -dmenu -p "> ")
     val=$?
     if [[ $val -eq 1 ]]; then exit
-    else
-        if [[ $listitem == "< Return" ]]; then main
-        elif [[ $listmenu == "---" ]]; then :
+    elif [[ $val -eq 0 ]]; then
+        if [[ $listitems == "< Return" ]]; then main
+        elif [[ $listitems == "---" ]]; then :
         else
             field=$(echo ${listitems} | awk -F ': ' '{ print $1 }')
             value=$(echo ${listitems} | awk -F ': ' '{ print $2 }')
@@ -102,12 +102,14 @@ optionsmenu () {
     fi
     title=$(grep -P '^caption: ' "${noteroot}/${file}" | awk -F 'caption: ' '{ print $2 }')
     url=$(grep -P '^url: ' "${noteroot}/${file}" | awk -F 'url: ' '{ print $2 }')
+    help_url=$(echo "${url}" | cut -c 1-100)
+    help_url2="$(echo "${help_url}[...])" | out2html -p)"
     if [[ -z $url ]]; then
         HELP="Chose Option for item ${title}"
         doopt=$(echo -e "< Return\n---\n1. Mark Done\n2. Delete\n3. Set Priority\n4. Edit\n---\n5. Add URL"| _rofi -mesg "${HELP}" -dmenu -p "> ")
     else
-        HELP="Chose Option for item ${title}
-Detected URL: ${url}"
+        HELP="Item: ${title}
+URL:  <span color='#333333'>${help_url2}</span>"
         doopt=$(echo -e "< Return\n---\n1. Mark Done\n2. Delete\n3. Set Priority\n4. Edit\n---\n5. Open URL\n6. Delete URL"| _rofi -mesg "${HELP}" -dmenu -p "> ")
     fi
     val=$?
