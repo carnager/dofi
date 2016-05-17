@@ -178,41 +178,13 @@ setpriority () {
     optionsmenu
 }
 
-addtodo () {
-    if [[ $2 != "-caption" ]]; then
-        echo "Missing -name option."
-        exit
-    elif [[ $2 == "-caption" ]]; then
-        Name="$3"
-    fi
-    echo "Using Documentroot \"${noteroot}\""
-    OIFS=$IFS;
-    IFS="-";
-    fields="$@";
-    fieldsArray=($fields);
-
-    cd "${noteroot}"
-    
-    newfile=$(date +'%Y-%m-%d-%H%M%S'.todo)
-
-    for ((i=1; i<${#fieldsArray[@]}; ++i)); do
-        field=$(echo "${fieldsArray[$i]}" | awk -F' ' '{print $1}')
-        option=$(echo "${fieldsArray[$i]}" | cut -d ' ' -f 2- | sed -e 's/[[:blank:]]\+$//')
-        echo "$field: $option" >> "${noteroot}/${newfile}"
-    done
-    echo "abc: 3" >> "${noteroot}/${newfile}"
-}
-
-if [[ $1 == "--new" ]]; then
-    addtodo $@
-else
-    if [[ ! -d "$noteroot" ]]; then
-        echo "Error: Directory ${noteroot} does not exist"
-        exit
-    fi
-    if [[ ! -d "$done_notes" ]]; then
-        echo "Error: Directory ${done_notes} does not exist"
-        exit
-    fi
-    main
+if [[ ! -d "$noteroot" ]]; then
+    echo "Error: Directory ${noteroot} does not exist"
+    exit
 fi
+if [[ ! -d "$done_notes" ]]; then
+    echo "Error: Directory ${done_notes} does not exist"
+    exit
+fi
+main
+
