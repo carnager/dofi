@@ -24,9 +24,10 @@ listtodo () {
 }
 
 main () {
+    HELP="Welcome to dofi. Use <span color='${title_color}'>Alt+n</span> to create a new todo"
     listtodo
     file=""
-    mainmenu=$(echo -e "< Exit\n---\n${list}" | _rofi -kb-custom-1 "Alt+n" -u "${high}" -a "${medium}" -mesg "Alt+n: New" -dmenu -p "> ")
+    mainmenu=$(echo -e "< Exit\n---\n${list}" | _rofi -kb-custom-1 "Alt+n" -u "${high}" -a "${medium}" -mesg "${HELP}" -dmenu -p "> ")
     val=$?
     if [[ $val -eq 10 ]]; then
         newitem
