@@ -40,6 +40,8 @@ it's very easy to filter for tasks with a specific priority: `^1`
 If you use proper symbols for groups and tags (I use *+* and *@*), you can filter this down very precisely: `^1 @vinyl` will show all todos which
 have the tag *vinyl* and priority *1*.
 
+the rofi command line options can be changed in the config file.
+
 # Dependencies:
 
 * gawk
