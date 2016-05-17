@@ -30,6 +30,10 @@ The field names have been choosen to be alphabetical. This way no complicated pa
 the visible one-line representation of each todo. The script simply strips away the linebreaks and replaces them with
 tabs. After that gnu's column tool is used to create an aligned table.
 
+dofi also shows the associated URLs at the top of each items options screen. Since rofi only allows pango markup for its
+message lines, another dependency was needed: out2html, which was created by rofi's author. On the plus side, this allows
+for some coloring. Colors for the help texts are user configurable.
+
 # Dependencies:
 
 * gawk
