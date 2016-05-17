@@ -34,6 +34,12 @@ dofi also shows the associated URLs at the top of each items options screen. Sin
 message lines, another dependency was needed: out2html, which was created by rofi's author. On the plus side, this allows
 for some coloring. Colors for the help texts are user configurable.
 
+Default rofi call includes -regex and -tokenize arguments. This allows for powerful filtering. Since each line starts with the priority of the todo item
+it's very easy to filter for tasks with a specific priority: `^1`
+
+If you use proper symbols for groups and tags (I use *+* and *@*), you can filter this down very precisely: `^1 @vinyl` will show all todos which
+have the tag *vinyl* and priority *1*.
+
 # Dependencies:
 
 * gawk
