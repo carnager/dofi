@@ -104,7 +104,7 @@ optionsmenu () {
     title=$(grep -P '^caption: ' "${noteroot}/${file}" | awk -F 'caption: ' '{ print $2 }')
     url=$(grep -P '^url: ' "${noteroot}/${file}" | awk -F 'url: ' '{ print $2 }')
     help_url=$(echo "${url}" | cut -c 1-100)
-    help_url2="$(echo "${help_url}[...]" | out2html -p)"
+    help_url2="$(echo "${help_url}" | out2html -p)"
     if [[ -z $url ]]; then
         HELP="Item: <span color='${title_color}'>${title}</span>"
         doopt=$(echo -e "< Return\n---\n1. Mark Done\n2. Delete\n3. Set Priority\n4. Edit\n---\n5. Add URL"| _rofi -mesg "${HELP}" -dmenu -p "> ")
