@@ -30,17 +30,17 @@ The field names have been choosen to be alphabetical. This way no complicated pa
 the visible one-line representation of each todo. The script simply strips away the linebreaks and replaces them with
 tabs. After that gnu's column tool is used to create an aligned table.
 
-dofi also shows the associated URLs at the top of each items options screen. Since rofi only allows pango markup for its
+dofi also shows the associated URLs at the top of each item's options screen. Since rofi only allows pango markup for its
 message lines, another dependency was needed: out2html, which was created by rofi's author. On the plus side, this allows
 for some coloring. Colors for the help texts are user configurable.
 
-Default rofi call includes -regex and -tokenize arguments. This allows for powerful filtering. Since each line starts with the priority of the todo item
+Default rofi call includes -regex and -tokenize arguments. These allow for powerful filtering. Since each line starts with the priority of the todo item
 it's very easy to filter for tasks with a specific priority: `^1`
 
 If you use proper symbols for groups and tags (I use *+* and *@*), you can filter this down very precisely: `^1 @vinyl` will show all todos which
-have the tag *vinyl* and priority *1*.
+have the tag *vinyl* and a priority of *1* associated with them.
 
-the rofi command line options can be changed in the config file.
+The rofi command line options can be changed in the config file.
 
 # Dependencies:
 
