@@ -1,5 +1,5 @@
 # dofi
-rofi UI for managing simple todos
+dofi is a todo manager written in bash, using rofi
 
 # Screenshot
 ![Screenshot]
@@ -7,8 +7,8 @@ rofi UI for managing simple todos
 
 # Features:
 
-* Show your tasks (duh!)
-* Basic tasks management (mark done, delete, set priority)
+* Show your tasks, colorized by priority
+* Basic tasks management (mark done, delete, edit, set priority)
 * Associate URLs with tasks (add, delete, open)
 
 # Internals:
