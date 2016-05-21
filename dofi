@@ -128,8 +128,13 @@ optionsmenu () {
     fi
     title=$(grep -P '^caption: ' "${notes}/${file}" | awk -F 'caption: ' '{ print $2 }')
     url=$(grep -P '^url: ' "${notes}/${file}" | awk -F 'url: ' '{ print $2 }')
-    help_url=$(echo "${url}" | cut -c 1-100)
-    help_url2="$(echo "${help_url}" | out2html -p)"
+    if [[ ${#url} -lt 100 ]]; then
+        help_url="${url}"
+        help_url2="$(echo "${help_url}" | out2html -p)"
+    elif [[ ${#url} -ge 100 ]]; then
+        help_url=$(echo "${url}" | cut -c 1-100)
+        help_url2="$(echo "${help_url} [...]" | out2html -p)"
+    fi
     if [[ -z $url ]]; then
         HELP="Item: <span color='${title_color}'>${title}</span>"
         doopt=$(echo -e "< Return\n---\n1. Mark Done\n2. Delete\n3. Set Priority\n4. Edit\n---\n5. Add URL"| _rofi -mesg "${HELP}" -dmenu -p "> ")
