@@ -1,9 +1,12 @@
 # dofi
 dofi is a todo manager written in bash, using rofi
 
-# Screenshot
+# Screenshots
 ![Screenshot]
 (images/image.jpg)
+
+![Details]
+(images/image2.jog)
 
 # Features:
 
