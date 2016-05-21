@@ -17,3 +17,6 @@ title_color="#2d7ed8"
 # hotkeys
 switch="Alt+Tab"
 new="Alt+n"
+
+# maximum length of shown url
+url_length=100

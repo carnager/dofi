@@ -7,6 +7,7 @@ _rofi () {
 noteroot="$HOME/Documents/bashtodo"
 done_notes="$HOME/Documents/bashtodo/done"
 BROWSER=chromium
+url_length=100
 
 # hotkeys
 switch="Alt+Tab"
@@ -128,11 +129,11 @@ optionsmenu () {
     fi
     title=$(grep -P '^caption: ' "${notes}/${file}" | awk -F 'caption: ' '{ print $2 }')
     url=$(grep -P '^url: ' "${notes}/${file}" | awk -F 'url: ' '{ print $2 }')
-    if [[ ${#url} -lt 100 ]]; then
+    if [[ ${#url} -lt "${url_length}" ]]; then
         help_url="${url}"
         help_url2="$(echo "${help_url}" | out2html -p)"
-    elif [[ ${#url} -ge 100 ]]; then
-        help_url=$(echo "${url}" | cut -c 1-100)
+    elif [[ ${#url} -ge "${url_length}" ]]; then
+        help_url=$(echo "${url}" | cut -c 1-${url_length})
         help_url2="$(echo "${help_url} [...]" | out2html -p)"
     fi
     if [[ -z $url ]]; then
