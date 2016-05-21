@@ -57,5 +57,5 @@ The rofi command line options can be changed in the config file.
 # Installation
 
 1. Copy dofi to $PATH
-2. Copy dofi.config to $HOME/.config/dofi/config
+2. Copy config.dofi to $HOME/.config/dofi/config
 3. Run dofi
