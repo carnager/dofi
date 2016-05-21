@@ -6,7 +6,7 @@ dofi is a todo manager written in bash, using rofi
 (images/image.jpg)
 
 ![Details]
-(images/image2.jog)
+(images/image2.jpg)
 
 # Features:
 
