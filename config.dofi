@@ -13,3 +13,7 @@ BROWSER="chromium"
 
 # color of title/urls
 title_color="#2d7ed8"
+
+# hotkeys
+switch="Alt+Tab"
+new="Alt+n"

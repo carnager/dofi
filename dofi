@@ -8,6 +8,10 @@ noteroot="$HOME/Documents/bashtodo"
 done_notes="$HOME/Documents/bashtodo/done"
 BROWSER=chromium
 
+# hotkeys
+switch="Alt+Tab"
+new="Alt+n"
+
 # colors
 title_color="#2d7ed8"
 
@@ -31,8 +35,8 @@ main () {
         view="active"
     fi
     cd "${notes}"
-    HELP="Welcome to dofi. Use <span color='${title_color}'>Alt+n</span> to create a new todo
-Use <span color='${title_color}'>Alt+Tab</span> to switch between active/done todos"
+    HELP="Welcome to dofi. Use <span color='${title_color}'>${new}</span> to create a new todo
+Use <span color='${title_color}'>${switch}</span> to switch between active/done todos"
     listtodo
     file=""
     mainmenu=$(echo -e "< Exit\n---\n${list}" | _rofi -kb-custom-1 "Alt+n" -kb-custom-2 "Alt+Tab" -u "${high}" -a "${medium}" -mesg "${HELP}" -dmenu -p ""${view}" > ")
