@@ -7,13 +7,12 @@ _rofi () {
 noteroot="$HOME/Documents/bashtodo"
 done_notes="$HOME/Documents/bashtodo/done"
 BROWSER=chromium
+
+# colors
 title_color="#2d7ed8"
 
 # load custom settings
 source $HOME/.config/dofi/config
-
-# start script
-cd "${noteroot}"
 
 listtodo () {
     list=$(for i in *.todo; do sort "${i}" | awk -F ': ' '{ print $2 }' | tr '\n' '\t' | sed -e "s/$/                                                                                                                                       file: $i/"; echo; done | sort | column -s $'\t' -t)
@@ -24,10 +23,19 @@ listtodo () {
 }
 
 main () {
-    HELP="Welcome to dofi. Use <span color='${title_color}'>Alt+n</span> to create a new todo"
+    if [[ -n ${done} ]]; then
+        notes="${done_notes}"
+        view="done"
+    else
+        notes="${noteroot}"
+        view="active"
+    fi
+    cd "${notes}"
+    HELP="Welcome to dofi. Use <span color='${title_color}'>Alt+n</span> to create a new todo
+Use <span color='${title_color}'>Alt+Tab</span> to switch between active/done todos"
     listtodo
     file=""
-    mainmenu=$(echo -e "< Exit\n---\n${list}" | _rofi -kb-custom-1 "Alt+n" -u "${high}" -a "${medium}" -mesg "${HELP}" -dmenu -p "> ")
+    mainmenu=$(echo -e "< Exit\n---\n${list}" | _rofi -kb-custom-1 "Alt+n" -kb-custom-2 "Alt+Tab" -u "${high}" -a "${medium}" -mesg "${HELP}" -dmenu -p ""${view}" > ")
     val=$?
     if [[ $val -eq 10 ]]; then
         newitem
@@ -35,7 +43,19 @@ main () {
     elif [[ $val -eq 0 ]]; then
         if [[ $mainmenu == "< Exit" ]]; then exit
         elif [[ $mainmenu == "---" ]]; then main
-        else optionsmenu
+        else
+            if [[ -n ${done} ]]; then
+                donemenu
+            else
+                optionsmenu
+            fi
+        fi
+    elif [[ $val -eq 11 ]]; then
+        if [[ -z "${done}" ]]; then
+            done="true" main
+        elif [[ -n "${done}" ]]; then
+            done=""
+            main
         fi
     fi
 }
@@ -67,7 +87,7 @@ newitem () {
     fi
     tags=$(echo "$tags" | sed ':a;N;$!ba;s/\n/, /g' | sort | uniq)
     newfile=$(date +'%Y-%m-%d-%H%M%S'.todo)
-    echo -e "abc: 3\ncaption: ${title}\ngroup: ${group}\ntags: ${tags}" >> "${noteroot}/${newfile}"
+    echo -e "abc: 3\ncaption: ${title}\ngroup: ${group}\ntags: ${tags}" >> "${notes}/${newfile}"
     file=${newfile} optionsmenu
 }
     
@@ -77,7 +97,7 @@ editmenu () {
         file=$(echo ${mainmenu} | awk -F 'file: ' '{ print $2 }')
     fi
     sort "${file}"
-    listitems=$(echo -e "< Return\n---\n$(sort ${noteroot}/${file})" | _rofi -dmenu -p "> ")
+    listitems=$(echo -e "< Return\n---\n$(sort ${notes}/${file})" | _rofi -dmenu -p "> ")
     val=$?
     if [[ $val -eq 1 ]]; then exit
     elif [[ $val -eq 0 ]]; then
@@ -90,8 +110,8 @@ editmenu () {
             val=$?
             if [[ $val -eq 1 ]]; then exit
             else
-                sed -i "/^${field}/ d" "${noteroot}/${file}"
-                echo "${field}: ${inputmenu}" >> "${noteroot}/${file}"
+                sed -i "/^${field}/ d" "${notes}/${file}"
+                echo "${field}: ${inputmenu}" >> "${notes}/${file}"
             fi
         fi
     fi
@@ -102,8 +122,8 @@ optionsmenu () {
     if [[ -z $file ]]; then
         file=$(echo ${mainmenu} | awk -F 'file: ' '{ print $2 }')
     fi
-    title=$(grep -P '^caption: ' "${noteroot}/${file}" | awk -F 'caption: ' '{ print $2 }')
-    url=$(grep -P '^url: ' "${noteroot}/${file}" | awk -F 'url: ' '{ print $2 }')
+    title=$(grep -P '^caption: ' "${notes}/${file}" | awk -F 'caption: ' '{ print $2 }')
+    url=$(grep -P '^url: ' "${notes}/${file}" | awk -F 'url: ' '{ print $2 }')
     help_url=$(echo "${url}" | cut -c 1-100)
     help_url2="$(echo "${help_url}" | out2html -p)"
     if [[ -z $url ]]; then
@@ -118,7 +138,7 @@ URL:  <span color='${title_color}'>${help_url2}</span>"
     if [[ $val -eq 1 ]]; then exit
     else
         if [[ $doopt == "5. Open URL" ]]; then $BROWSER "${url}"
-        elif [[ $doopt == "1. Mark Done" ]]; then mv "${noteroot}/${file}" "${done_notes}"; main
+        elif [[ $doopt == "1. Mark Done" ]]; then mv "${notes}/${file}" "${done_notes}"; main
         elif [[ $doopt == "2. Delete" ]]; then delitem
         elif [[ $doopt == "3. Set Priority" ]]; then setpriority
         elif [[ $doopt == "4. Edit" ]]; then editmenu
@@ -130,12 +150,40 @@ URL:  <span color='${title_color}'>${help_url2}</span>"
     fi
 }
 
+donemenu () {
+    if [[ -z $file ]]; then
+        file=$(echo ${mainmenu} | awk -F 'file: ' '{ print $2 }')
+    fi
+    title=$(grep -P '^caption: ' "${notes}/${file}" | awk -F 'caption: ' '{ print $2 }')
+    url=$(grep -P '^url: ' "${notes}/${file}" | awk -F 'url: ' '{ print $2 }')
+    help_url=$(echo "${url}" | cut -c 1-100)
+    help_url2="$(echo "${help_url}" | out2html -p)"
+    if [[ -z $url ]]; then
+        HELP="Item: <span color='${title_color}'>${title}</span>"
+        doopt=$(echo -e "< Return\n---\n1. Mark Active\n2. Delete" | _rofi -mesg "${HELP}" -dmenu -p "> ")
+    else
+        HELP="Item: <span color='${title_color}'>${title}</span>
+URL:  <span color='${title_color}'>${help_url2}</span>"
+        doopt=$(echo -e "< Return\n---\n1. Mark Active\n2. Delete\n---\n3. Open URL"| _rofi -mesg "${HELP}" -dmenu -p "> ")
+    fi
+    val=$?
+    if [[ $val -eq 1 ]]; then exit
+    else
+        if [[ $doopt == "3. Open URL" ]]; then $BROWSER "${url}"
+        elif [[ $doopt == "1. Mark Active" ]]; then mv "${notes}/${file}" "${noteroot}"; main
+        elif [[ $doopt == "2. Delete" ]]; then delitem
+        elif [[ $doopt == "< Return" ]]; then main
+        elif [[ $doopt == "---" ]]; then optionsmenu
+        fi
+    fi
+}
+
 addURL () {
     if [[ -z $file ]]; then
         file=$(echo ${mainmenu} | awk -F 'file: ' '{ print $2 }')
     fi
     urlmenu=$(echo -e "< Cancel" | _rofi -dmenu -mesg "Add URL to ${title}" -p "> ")
-    echo "url: ${urlmenu}" >> "${noteroot}/${file}"
+    echo "url: ${urlmenu}" >> "${notes}/${file}"
     optionsmenu
 }
 
@@ -144,7 +192,7 @@ delURL () {
         file=$(echo ${mainmenu} | awk -F 'file: ' '{ print $2 }')
     fi
     urlmenu=$(echo -e "1. Yes\n2. No" | _rofi -dmenu -mesg "Delete URL ${url}?" -p "> ")
-    if [[ $urlmenu == "1. Yes" ]]; then sed -i '/^url: / d' "${noteroot}/${file}"
+    if [[ $urlmenu == "1. Yes" ]]; then sed -i '/^url: / d' "${notes}/${file}"
     elif [[ $urlmenu == "2. No" ]]; then :
     fi
     optionsmenu
@@ -155,7 +203,7 @@ delitem () {
         file=$(echo ${mainmenu} | awk -F 'file: ' '{ print $2 }')
     fi
     itemmenu=$(echo -e "1. Yes\n2. No" | _rofi -dmenu -mesg "Delete item ${title}?" -p "> ")
-    if [[ $itemmenu == "1. Yes" ]]; then rm -f "${noteroot}/${file}"
+    if [[ $itemmenu == "1. Yes" ]]; then rm -f "${notes}/${file}"
     elif [[ $itemmenu == "2. No" ]]; then :
     fi
     main
@@ -165,7 +213,7 @@ setpriority () {
     if [[ -z $file ]]; then
         file=$(echo ${mainmenu} | awk -F 'file: ' '{ print $2 }')
     fi
-    title=$(awk -F 'caption: ' '{ print $2 }' "${noteroot}/${file}")
+    title=$(awk -F 'caption: ' '{ print $2 }' "${notes}/${file}")
     priomenu=$(echo -e "< Return\n---\n1\n2\n3" | _rofi -dmenu -p "> " -mesg "Set Priority for item ${title}")
     val=$?
     if [[ $val -eq 1 ]]; then exit
@@ -173,8 +221,8 @@ setpriority () {
         if [[ $priomenu == "< Return" ]]; then optionsmenu
         elif [[ $priomenu == "---" ]]; then setpriority
         else
-            sed -i "/^abc: / d" "${noteroot}/${file}"
-            echo "abc: ${priomenu}" >> "${noteroot}/${file}"
+            sed -i "/^abc: / d" "${notes}/${file}"
+            echo "abc: ${priomenu}" >> "${notes}/${file}"
         fi
     fi
     optionsmenu
