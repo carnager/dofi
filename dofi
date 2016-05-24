@@ -40,7 +40,11 @@ main () {
 Use <span color='${title_color}'>${switch}</span> to switch between active/done todos"
     listtodo
     file=""
-    mainmenu=$(echo -e "< Exit\n---\n${list}" | _rofi -kb-custom-1 "Alt+n" -kb-custom-2 "Alt+Tab" -u "${high}" -a "${medium}" -mesg "${HELP}" -dmenu -p ""${view}" > ")
+    if [[ -n ${done} ]]; then
+        mainmenu=$(echo -e "< Exit\n---\n${list}" | _rofi -kb-custom-1 "Alt+n" -kb-custom-2 "Alt+Tab" -mesg "${HELP}" -dmenu -p ""${view}" > ")
+    else
+        mainmenu=$(echo -e "< Exit\n---\n${list}" | _rofi -kb-custom-1 "Alt+n" -kb-custom-2 "Alt+Tab" -u "${high}" -a "${medium}" -mesg "${HELP}" -dmenu -p ""${view}" > ")
+    fi
     val=$?
     if [[ $val -eq 10 ]]; then
         newitem
