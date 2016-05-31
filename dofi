@@ -197,8 +197,17 @@ addURL () {
         file=$(echo ${mainmenu} | awk -F 'file: ' '{ print $2 }')
     fi
     urlmenu=$(echo -e "< Cancel" | _rofi -dmenu -mesg "Add URL to ${title}" -p "> ")
-    echo "url: ${urlmenu}" >> "${notes}/${file}"
-    optionsmenu
+    val=$?
+    if [[ $val -eq 1 ]]; then
+        exit
+    elif [[ $val -eq 0 ]]; then
+        if [[ $urlmenu == "< Cancel" ]]; then
+            optionsmenu
+        else
+            echo "url: ${urlmenu}" >> "${notes}/${file}"
+            optionsmenu
+        fi
+    fi
 }
 
 delURL () {
@@ -206,10 +215,15 @@ delURL () {
         file=$(echo ${mainmenu} | awk -F 'file: ' '{ print $2 }')
     fi
     urlmenu=$(echo -e "1. Yes\n2. No" | _rofi -dmenu -mesg "Delete URL ${url}?" -p "> ")
-    if [[ $urlmenu == "1. Yes" ]]; then sed -i '/^url: / d' "${notes}/${file}"
-    elif [[ $urlmenu == "2. No" ]]; then :
+    val=$?
+    if [[ $val -eq 1 ]]; then
+        exit
+    elif [[ $val -eq 0 ]]; then
+        if [[ $urlmenu == "1. Yes" ]]; then sed -i '/^url: / d' "${notes}/${file}"
+        elif [[ $urlmenu == "2. No" ]]; then :
+        fi
+        optionsmenu
     fi
-    optionsmenu
 }
     
 delitem () {
@@ -217,10 +231,15 @@ delitem () {
         file=$(echo ${mainmenu} | awk -F 'file: ' '{ print $2 }')
     fi
     itemmenu=$(echo -e "1. Yes\n2. No" | _rofi -dmenu -mesg "Delete item ${title}?" -p "> ")
-    if [[ $itemmenu == "1. Yes" ]]; then rm -f "${notes}/${file}"
-    elif [[ $itemmenu == "2. No" ]]; then :
+    val=$?
+    if [[ $val -eq 1 ]]; then
+        exit
+    elif [[ $val -eq 0 ]]; then
+        if [[ $itemmenu == "1. Yes" ]]; then rm -f "${notes}/${file}"
+        elif [[ $itemmenu == "2. No" ]]; then :
+        fi
+        main
     fi
-    main
 }
 
 setpriority () {
