@@ -8,6 +8,9 @@ _rofi () {
 # set root directory
 noteroot="$HOME/Documents/todo"
 
+# where to store done todos
+done_notes="${noteroot}/done"
+
 # set browser
 BROWSER="chromium"
 
