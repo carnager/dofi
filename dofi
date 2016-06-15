@@ -5,7 +5,7 @@ _rofi () {
     rofi -regex -tokenize -i -lines 30 -width 1500 -no-levenshtein-sort "$@"
 }
 noteroot="$HOME/Documents/bashtodo"
-done_notes="$HOME/Documents/bashtodo/done"
+done_notes="${noteroot}/done"
 BROWSER=chromium
 url_length=100
 
