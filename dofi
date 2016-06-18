@@ -134,18 +134,16 @@ optionsmenu () {
     title=$(grep -P '^caption: ' "${notes}/${file}" | awk -F 'caption: ' '{ print $2 }')
     url=$(grep -P '^url: ' "${notes}/${file}" | awk -F 'url: ' '{ print $2 }')
     if [[ ${#url} -lt "${url_length}" ]]; then
-        help_url="${url}"
-        help_url2="$(echo "${help_url}" | out2html -p)"
+        help_url="$(echo "${url}" | out2html -p)"
     elif [[ ${#url} -ge "${url_length}" ]]; then
-        help_url=$(echo "${url}" | cut -c 1-${url_length})
-        help_url2="$(echo "${help_url} [...]" | out2html -p)"
+        help_url="$(echo "${url:0:${url_length}} [...]"  | out2html -p)"
     fi
     if [[ -z $url ]]; then
         HELP="Item: <span color='${title_color}'>${title}</span>"
         doopt=$(echo -e "< Return\n---\n1. Mark Done\n2. Delete\n3. Set Priority\n4. Edit\n---\n5. Add URL"| _rofi -mesg "${HELP}" -dmenu -p "> ")
     else
         HELP="Item: <span color='${title_color}'>${title}</span>
-URL:  <span color='${title_color}'>${help_url2}</span>"
+URL:  <span color='${title_color}'>${help_url}</span>"
         doopt=$(echo -e "< Return\n---\n1. Mark Done\n2. Delete\n3. Set Priority\n4. Edit\n---\n5. Open URL\n6. Delete URL"| _rofi -mesg "${HELP}" -dmenu -p "> ")
     fi
     val=$?
@@ -170,14 +168,13 @@ donemenu () {
     fi
     title=$(grep -P '^caption: ' "${notes}/${file}" | awk -F 'caption: ' '{ print $2 }')
     url=$(grep -P '^url: ' "${notes}/${file}" | awk -F 'url: ' '{ print $2 }')
-    help_url=$(echo "${url}" | cut -c 1-100)
-    help_url2="$(echo "${help_url}" | out2html -p)"
+    help_url="$(echo "${url:0:${url_length}}" | out2html -p)"
     if [[ -z $url ]]; then
         HELP="Item: <span color='${title_color}'>${title}</span>"
         doopt=$(echo -e "< Return\n---\n1. Mark Active\n2. Delete" | _rofi -mesg "${HELP}" -dmenu -p "> ")
     else
         HELP="Item: <span color='${title_color}'>${title}</span>
-URL:  <span color='${title_color}'>${help_url2}</span>"
+URL:  <span color='${title_color}'>${help_url}</span>"
         doopt=$(echo -e "< Return\n---\n1. Mark Active\n2. Delete\n---\n3. Open URL"| _rofi -mesg "${HELP}" -dmenu -p "> ")
     fi
     val=$?
