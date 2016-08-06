@@ -15,6 +15,7 @@ new="Alt+n"
 
 # colors
 title_color="#2d7ed8"
+date_color="#FF00FF"
 
 # load custom settings
 source $HOME/.config/dofi/config
@@ -134,6 +135,7 @@ optionsmenu () {
         file=$(echo ${mainmenu} | awk -F 'file: ' '{ print $2 }')
     fi
     title=$(grep -P '^caption: ' "${notes}/${file}" | awk -F 'caption: ' '{ print $2 }')
+    deadline=$(grep -P '^deadline: ' "${notes}/${file}" | awk -F 'deadline: ' '{ print $2 }')
     url=$(grep -P '^url: ' "${notes}/${file}" | awk -F 'url: ' '{ print $2 }')
     if [[ ${#url} -lt "${url_length}" ]]; then
         help_url="$(echo "${url}" | out2html -p)"
@@ -141,12 +143,25 @@ optionsmenu () {
         help_url="$(echo "${url:0:${url_length}} [...]"  | out2html -p)"
     fi
     if [[ -z $url ]]; then
-        HELP="Item: <span color='${title_color}'>${title}</span>"
-        doopt=$(echo -e "< Return\n---\n1. Mark Done\n2. Delete\n3. Set Priority\n4. Edit\n---\n5. Add URL"| _rofi -mesg "${HELP}" -dmenu -p "> ")
+        if [[ -z $deadline ]]; then
+            HELP="Item: <span color='${title_color}'>${title}</span>"
+            doopt=$(echo -e "< Return\n---\n1. Mark Done\n2. Delete\n3. Set Priority\n4. Set Deadline\n5. Edit\n---\n5. Add URL"| _rofi -mesg "${HELP}" -dmenu -p "> ")
+        else
+            HELP="Item: <span color='${title_color}'>${title}</span>
+Deadline: <span color='${date_color}'>${deadline}</span>"
+        doopt=$(echo -e "< Return\n---\n1. Mark Done\n2. Delete\n3. Set Priority\n4. Unset Deadline\n5. Edit\n---\n5. Add URL"| _rofi -mesg "${HELP}" -dmenu -p "> ")
+        fi
     else
-        HELP="Item: <span color='${title_color}'>${title}</span>
+        if [[ -z $deadline ]]; then
+            HELP="Item: <span color='${title_color}'>${title}</span>
 URL:  <span color='${title_color}'>${help_url}</span>"
-        doopt=$(echo -e "< Return\n---\n1. Mark Done\n2. Delete\n3. Set Priority\n4. Edit\n---\n5. Open URL\n6. Delete URL"| _rofi -mesg "${HELP}" -dmenu -p "> ")
+            doopt=$(echo -e "< Return\n---\n1. Mark Done\n2. Delete\n3. Set Priority\n4. Set Deadline\n5. Edit\n---\n5. Open URL\n6. Delete URL"| _rofi -mesg "${HELP}" -dmenu -p "> ")
+        else
+            HELP="Item: <span color='${title_color}'>${title}</span>
+URL:  <span color='${title_color}'>${help_url}</span>
+Deadline: <span color='${date_color}'>${deadline}</span>"
+        doopt=$(echo -e "< Return\n---\n1. Mark Done\n2. Delete\n3. Set Priority\n4. Unset Deadline\n5. Edit\n---\n5. Open URL\n6. Delete URL"| _rofi -mesg "${HELP}" -dmenu -p "> ")
+        fi
     fi
     val=$?
     if [[ $val -eq 1 ]]; then exit
@@ -155,13 +170,28 @@ URL:  <span color='${title_color}'>${help_url}</span>"
         elif [[ $doopt == "1. Mark Done" ]]; then mv "${notes}/${file}" "${done_notes}"; main
         elif [[ $doopt == "2. Delete" ]]; then delitem
         elif [[ $doopt == "3. Set Priority" ]]; then setpriority
-        elif [[ $doopt == "4. Edit" ]]; then editmenu
+        elif [[ $doopt == "4. Set Deadline" ]]; then setDate
+        elif [[ $doopt == "4. Unset Deadline" ]]; then rmDate
+        elif [[ $doopt == "5. Edit" ]]; then editmenu
         elif [[ $doopt == "< Return" ]]; then main
         elif [[ $doopt == "5. Add URL" ]]; then addURL
         elif [[ $doopt == "6. Delete URL" ]]; then delURL
         elif [[ $doopt == "---" ]]; then optionsmenu
         fi
     fi
+}
+
+setDate () {
+  foo=$(date +'%Y-%m-%d')                                                                                    
+  s_date=$(seq 1 120 | xargs -I {} date -d "${foo} {} days" +'%Y %b %d' | rofi -dmenu -i -no-levenshtein)
+  sed -i "/^deadline: / d" "${notes}/${file}"
+  echo "deadline: ${s_date}" >> "${notes}/${file}"
+  optionsmenu
+}
+
+rmDate () {
+  sed -i "/^deadline: / d" "${notes}/${file}"
+  optionsmenu
 }
 
 donemenu () {
