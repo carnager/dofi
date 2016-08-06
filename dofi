@@ -86,13 +86,15 @@ newitem () {
         else :
         fi
     fi
-    tags=$(echo -e "< Cancel\n---\n$(grep -how '\@.*' *.todo | sed 's/, /\n/g' | sort -u)" | _rofi -dmenu -p "> " -mesg "Enter Tags (comma separated) or chose below (Use <span color='${title_color}'>Space+Enter</span> to multi-select)")
+    tags=$(echo -e "< Cancel\nNOTAG\n$(grep -how '\@.*' *.todo | sed 's/, /\n/g' | sort -u)" | _rofi -dmenu -p "> " -mesg "Enter Tags (comma separated) or chose below (Use <span color='${title_color}'>Space+Enter</span> to multi-select)")
     val=$?
     if [[ $val -eq 1 ]]; then exit
     else
         if [[ $tags == "< Cancel" ]]; then main
+        elif [[ $tags == "NOTAG" ]]; then export tags=""
         else :
         fi
+
     fi
     tags=$(echo "$tags" | sed ':a;N;$!ba;s/\n/, /g' | sort | uniq)
     newfile=$(date +'%Y-%m-%d-%H%M%S'.todo)
