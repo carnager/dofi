@@ -20,12 +20,20 @@ date_color="#FF00FF"
 # load custom settings
 source $HOME/.config/dofi/config
 
+agenda=0
+
 listtodo () {
-    list=$(for i in *.todo; do sort "${i}" | awk -F ': ' '{ print $2 }' | tr '\n' '\t' | sed -e "s/$/                                                                                                                                       file: $i/"; echo; done | sort | column -s $'\t' -t)
+    list=$(for i in *.todo; do sort "${i}" | sed '/^123/d' | awk -F ': ' '{ print $2 }' | tr '\n' '\t' | sed -e "s/$/                                                                                                                                       file: $i/"; echo; done | sort | column -s $'\t' -t)
     high=$(echo "${list}" | grep -n "^1" | cut -f1 -d:)
     high=$(echo "$high" | while read line; do echo $(( $line + 1 )); done | sed ':a;N;$!ba;s/\n/, /g')
     medium=$(echo "${list}" | grep -n "^2" | cut -f1 -d:)
     medium=$(echo "$medium" | while read line; do echo $(( $line + 1 )); done | sed ':a;N;$!ba;s/\n/, /g')
+}
+
+listbydate () {
+    unset high
+    unset medium
+    list=$(for i in *.todo; do sort "${i}" | sed 's/^abc:.*/abc: /' | awk -F ': ' '{ print $2 }' | tr '\n' '\t' | sed -e "s/$/                                                                                                                                       file: $i/"; echo; done | sort | sed '/^--------/d' | column -s $'\t' -t)
 }
 
 main () {
@@ -38,16 +46,26 @@ main () {
     fi
     cd "${notes}"
     HELP="Welcome to dofi. Use <span color='${title_color}'>${new}</span> to create a new todo
-Use <span color='${title_color}'>${switch}</span> to switch between active/done todos"
-    listtodo
+Use <span color='${title_color}'>${switch}</span> to switch between active/done todos. <span color='${title_color}'>Alt+a</span> switches agenda view."
+    if [[ $agenda == "1" ]]; then
+      listbydate
+    else
+      listtodo
+    fi
     file=""
     if [[ -n ${done} ]]; then
-        mainmenu=$(echo -e "< Exit\n---\n${list}" | _rofi -kb-custom-1 "Alt+n" -kb-custom-2 "Alt+Tab" -mesg "${HELP}" -dmenu -p ""${view}" > ")
+        mainmenu=$(echo -e "< Exit\n---\n${list}" | _rofi -kb-custom-1 "Alt+n" -kb-custom-2 "Alt+Tab" -kb-custom-3 "Alt+a" -mesg "${HELP}" -dmenu -p ""${view}" > ")
     else
-        mainmenu=$(echo -e "< Exit\n---\n${list}" | _rofi -kb-custom-1 "Alt+n" -kb-custom-2 "Alt+Tab" -u "${high}" -a "${medium}" -mesg "${HELP}" -dmenu -p ""${view}" > ")
+        mainmenu=$(echo -e "< Exit\n---\n${list}" | _rofi -kb-custom-1 "Alt+n" -kb-custom-2 "Alt+Tab" -kb-custom-3 "Alt+a" -u "${high}" -a "${medium}" -mesg "${HELP}" -dmenu -p ""${view}" > ")
     fi
     val=$?
-    if [[ $val -eq 10 ]]; then
+    if [[ $val -eq 12 ]]; then
+      if [[ $agenda == "1" ]]; then
+        agenda=0 main
+      elif [[ $agenda == "0" ]]; then
+        agenda=1 main
+      fi
+    elif [[ $val -eq 10 ]]; then
         newitem
     elif [[ $val -eq 1 ]]; then exit
     elif [[ $val -eq 0 ]]; then
@@ -99,7 +117,7 @@ newitem () {
     fi
     tags=$(echo "$tags" | sed ':a;N;$!ba;s/\n/, /g' | sort | uniq)
     newfile=$(date +'%Y-%m-%d-%H%M%S'.todo)
-    echo -e "abc: 3\ncaption: ${title}\ngroup: ${group}\ntags: ${tags}" >> "${notes}/${newfile}"
+    echo -e "123: --------\nabc: 3\ncaption: ${title}\ngroup: ${group}\ntags: ${tags}" >> "${notes}/${newfile}"
     file=${newfile} optionsmenu
 }
     
@@ -135,7 +153,10 @@ optionsmenu () {
         file=$(echo ${mainmenu} | awk -F 'file: ' '{ print $2 }')
     fi
     title=$(grep -P '^caption: ' "${notes}/${file}" | awk -F 'caption: ' '{ print $2 }')
-    deadline=$(grep -P '^deadline: ' "${notes}/${file}" | awk -F 'deadline: ' '{ print $2 }')
+    deadline=$(grep -P '^123: ' "${notes}/${file}" | awk -F '123: ' '{ print $2 }')
+    if [[ $deadline == "--------" ]]; then
+      deadline=""
+    fi
     url=$(grep -P '^url: ' "${notes}/${file}" | awk -F 'url: ' '{ print $2 }')
     if [[ ${#url} -lt "${url_length}" ]]; then
         help_url="$(echo "${url}" | out2html -p)"
@@ -183,14 +204,14 @@ Deadline: <span color='${date_color}'>${deadline}</span>"
 
 setDate () {
   foo=$(date +'%Y-%m-%d')                                                                                    
-  s_date=$(seq 1 120 | xargs -I {} date -d "${foo} {} days" +'%Y %b %d' | rofi -dmenu -i -no-levenshtein)
+  s_date=$(seq 1 120 | xargs -I {} date -d "${foo} {} days" +'%Y-%m-%d' | rofi -dmenu -i -no-levenshtein)
   sed -i "/^deadline: / d" "${notes}/${file}"
-  echo "deadline: ${s_date}" >> "${notes}/${file}"
+  echo "123: ${s_date}" >> "${notes}/${file}"
   optionsmenu
 }
 
 rmDate () {
-  sed -i "/^deadline: / d" "${notes}/${file}"
+  sed -i "s/^123:.*/123: --------/" "${notes}/${file}"
   optionsmenu
 }
 
