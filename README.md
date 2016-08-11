@@ -8,11 +8,16 @@ dofi is a todo manager written in bash, using rofi
 ![Details]
 (images/image2.jpg)
 
+![Agenda]
+(images/agenda.jpg)
+
 # Features:
 
 * Show your tasks, colorized by priority
 * Basic tasks management (mark done, delete, edit, set priority)
 * Associate URLs with tasks (add, delete, open)
+* Associate dates to tasks
+* Agenda view
 
 # Internals:
 
