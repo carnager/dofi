@@ -48,6 +48,7 @@ main () {
     HELP="Welcome to dofi. Use <span color='${title_color}'>${new}</span> to create a new todo
 Use <span color='${title_color}'>${switch}</span> to switch between active/done todos. <span color='${title_color}'>Alt+a</span> switches agenda view."
     if [[ $agenda == "1" ]]; then
+      export view="agenda"
       listbydate
     else
       listtodo
