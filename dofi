@@ -11,7 +11,7 @@ url_length=100
 
 # hotkeys
 switch="Alt+Tab"
-switch_agenda="Alt-a"
+switch_agenda="Alt+a"
 new="Alt+n"
 
 # colors
