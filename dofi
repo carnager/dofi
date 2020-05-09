@@ -11,6 +11,7 @@ url_length=100
 
 # hotkeys
 switch="Alt+Tab"
+switch_agenda="Alt-a"
 new="Alt+n"
 
 # colors
@@ -46,7 +47,7 @@ main () {
     fi
     cd "${notes}"
     HELP="Welcome to dofi. Use <span color='${title_color}'>${new}</span> to create a new todo
-Use <span color='${title_color}'>${switch}</span> to switch between active/done todos. <span color='${title_color}'>Alt+a</span> switches agenda view."
+Use <span color='${title_color}'>${switch}</span> to switch between active/done todos. <span color='${title_color}'>${switch_agenda}</span> switches agenda view."
     if [[ $agenda == "1" ]]; then
       export view="agenda"
       listbydate
@@ -55,9 +56,9 @@ Use <span color='${title_color}'>${switch}</span> to switch between active/done 
     fi
     file=""
     if [[ -n ${done} ]]; then
-        mainmenu=$(echo -e "< Exit\n---\n${list}" | _rofi -kb-custom-1 "Alt+n" -kb-custom-2 "Alt+Tab" -kb-custom-3 "Alt+a" -mesg "${HELP}" -dmenu -p ""${view}" > ")
+        mainmenu=$(echo -e "< Exit\n---\n${list}" | _rofi -kb-custom-1 "${new}" -kb-custom-2 "${switch}" -kb-custom-3 "${switch_agenda}" -mesg "${HELP}" -dmenu -p ""${view}" > ")
     else
-        mainmenu=$(echo -e "< Exit\n---\n${list}" | _rofi -kb-custom-1 "Alt+n" -kb-custom-2 "Alt+Tab" -kb-custom-3 "Alt+a" -u "${high}" -a "${medium}" -mesg "${HELP}" -dmenu -p ""${view}" > ")
+        mainmenu=$(echo -e "< Exit\n---\n${list}" | _rofi -kb-custom-1 "${new}" -kb-custom-2 "${switch}" -kb-custom-3 "${switch_agenda}" -u "${high}" -a "${medium}" -mesg "${HELP}" -dmenu -p ""${view}" > ")
     fi
     val=$?
     if [[ $val -eq 12 ]]; then
@@ -121,7 +122,7 @@ newitem () {
     echo -e "123: --------\nabc: 3\ncaption: ${title}\ngroup: ${group}\ntags: ${tags}" >> "${notes}/${newfile}"
     file=${newfile} optionsmenu
 }
-    
+
 
 editmenu () {
     if [[ -z $file ]]; then
@@ -204,7 +205,7 @@ Deadline: <span color='${date_color}'>${deadline}</span>"
 }
 
 setDate () {
-  foo=$(date +'%Y-%m-%d')                                                                                    
+  foo=$(date +'%Y-%m-%d')
   s_date=$(seq 1 120 | xargs -I {} date -d "${foo} {} days" +'%Y-%m-%d' | rofi -dmenu -i -no-levenshtein)
   sed -i "/^deadline: / d" "${notes}/${file}"
   echo "123: ${s_date}" >> "${notes}/${file}"
@@ -276,7 +277,7 @@ delURL () {
         optionsmenu
     fi
 }
-    
+
 delitem () {
     if [[ -z $file ]]; then
         file=$(echo ${mainmenu} | awk -F 'file: ' '{ print $2 }')
@@ -321,4 +322,3 @@ if [[ ! -d "$done_notes" ]]; then
     exit
 fi
 main
-
