@@ -2,14 +2,11 @@
 dofi is a todo manager written in bash, using rofi
 
 # Screenshots
-![Screenshot]
-(images/image.jpg)
+![Screenshot](images/image.jpg)
 
-![Details]
-(images/image2.jpg)
+![Details](images/image2.jpg)
 
-![Agenda]
-(images/agenda.jpg)
+![Agenda](images/agenda.jpg)
 
 # Features:
 
@@ -60,6 +57,8 @@ The rofi command line options can be changed in the config file.
 * out2html (for pango formatting of urls)
 
 # Installation
+
+>ArchLinux users can found dofi in the AUR
 
 1. Copy dofi to $PATH
 2. Copy config.dofi to $HOME/.config/dofi/config
